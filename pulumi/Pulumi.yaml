@@ -1,0 +1,3 @@
+name: elephant-seal-facts
+runtime: go
+description: Infrastructure for the elephant-seal-facts project
