@@ -29,11 +29,19 @@ func main() {
 			return err
 		}
 
-		redisConfig := config.New(ctx, "redis")
-		replicas, _ := strconv.Atoi(redisConfig.Require("replicas")) // FIXME: Unhandled error
-
 		// Deploy Redis
-		err = DeployRedisChart(ctx, RedisValues{namespace: namespace, replicas: replicas})
+		redisConfig := config.New(ctx, "redis")
+		redisPassword := string(redisConfig.Require("password"))
+		replicas, err := strconv.Atoi(redisConfig.Require("replicas")) // FIXME: Unhandled error
+		if err != nil {
+			return err
+		}
+
+		err = DeployRedisChart(ctx, RedisValues{
+			namespace: namespace,
+			password:  redisPassword,
+			replicas:  replicas,
+		})
 		if err != nil {
 			return err
 		}
@@ -44,6 +52,7 @@ func main() {
 
 type RedisValues struct {
 	namespace string
+	password  string
 	replicas  int
 }
 
@@ -55,6 +64,9 @@ func DeployRedisChart(ctx *pulumi.Context, values RedisValues) error {
 			Repo: pulumi.String(bitnamiHelmRepo),
 		},
 		Values: pulumi.Map{
+			"auth": pulumi.Map{
+				"password": pulumi.String(values.password),
+			},
 			"replica": pulumi.Map{
 				"replicaCount": pulumi.Int(values.replicas),
 			},

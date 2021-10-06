@@ -5,6 +5,10 @@ on:
     paths:
       - 'factscraper/**'
       - '.github/workflows/factscraper.yml'
+  pull-request:
+    paths:
+      - 'factscraper/**'
+      - '.github/workflows/factscraper.yml'
 
 env:
   REGISTRY: ghcr.io
