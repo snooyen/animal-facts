@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'pulumi/**'
   workflow_run:
       workflows:
         - "Build fact-scraper"
