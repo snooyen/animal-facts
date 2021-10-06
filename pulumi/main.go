@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/kustomize"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
@@ -42,6 +43,18 @@ func main() {
 			password:  redisPassword,
 			replicas:  replicas,
 		})
+		if err != nil {
+			return err
+		}
+
+		// Deploy FactScraper Service
+		factScraperConfig := config.New(ctx, "fact-scraper")
+		factScraperOverlay := factScraperConfig.Require("overlay")
+		_, err = kustomize.NewDirectory(ctx, "fact-scraper",
+			kustomize.DirectoryArgs{
+				Directory: pulumi.String(factScraperOverlay),
+			},
+		)
 		if err != nil {
 			return err
 		}

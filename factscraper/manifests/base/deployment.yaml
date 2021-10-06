@@ -1,0 +1,32 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fact-scraper
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: fact-scraper
+  template:
+    metadata:
+      labels:
+        deployment: fact-scraper
+    spec:
+      containers:
+      - name: fact-scraper
+        image: ghcr.io/snooyen/animal-facts/fact-scraper:main
+        command:
+          - fact-scraper
+          - --port=3000
+          - --redisHost=redis-headless
+          - --redisPassword=$REDIS_PASSWORD
+        ports:
+        - containerPort: 3000
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis
+              key: redis-password
+

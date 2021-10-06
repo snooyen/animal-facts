@@ -1,0 +1,13 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: fact-scraper
+spec:
+  selector:
+    deployment: fact-scraper
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 3000
+    targetPort: 3000
