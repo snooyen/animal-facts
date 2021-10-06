@@ -1,0 +1,27 @@
+name: Deploy Animal-Facts
+on:
+  push:
+    branches:
+      - main
+
+defaults:
+  run:
+    working-directory: ./pulumi
+
+jobs:
+  pulumi-up:
+    name: Pulumi Up
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v1
+        with:
+          go-version: 1.17.x
+      - run: go mod download
+      - uses: pulumi/actions@v3
+        with:
+          command: up
+          stack-name: dev
+          work-dir: ./pulumi
+        env:
+          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
