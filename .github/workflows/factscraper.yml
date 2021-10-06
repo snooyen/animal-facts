@@ -1,4 +1,4 @@
-name: fact-scraper CI
+name: Build fact-scraper
 
 on:
   push:
