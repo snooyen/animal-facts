@@ -50,7 +50,8 @@ func (s service) Publish(ctx context.Context, animal string) (response PublishRe
 
 	// Send fact for approval
 	approvalChan := fmt.Sprintf("approvals:%s", animal)
-	err = s.rdb.Publish(ctx, approvalChan, response.Fact).Err()
+	approvalMsg := fmt.Sprintf("%s:%s", strconv.FormatFloat(response.Score, 'f', -1, 64), response.Fact)
+	err = s.rdb.Publish(ctx, approvalChan, approvalMsg).Err()
 
 	return
 }
