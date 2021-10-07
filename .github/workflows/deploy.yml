@@ -8,6 +8,7 @@ on:
   workflow_run:
       workflows:
         - "Build fact-scraper"
+        - "Build fact-publisher"
       branches:
         - main
       types:
