@@ -21,7 +21,7 @@ spec:
           - fact-scraper
           - --port=3000
           - --redisHost=redis-headless
-          - --redisPassword=$REDIS_PASSWORD
+          - --redisPassword=$(REDIS_PASSWORD)
         ports:
         - containerPort: 3000
         env:
