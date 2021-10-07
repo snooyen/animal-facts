@@ -16,6 +16,7 @@ spec:
       containers:
       - name: fact-publisher
         image: ghcr.io/snooyen/animal-facts/fact-publisher:main
+        imagePullPolicy: Always
         command:
           - fact-publisher
           - --port=3001
