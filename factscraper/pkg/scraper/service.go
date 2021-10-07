@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/gocolly/colly"
 	"github.com/go-redis/redis/v8"
+	"github.com/gocolly/colly"
 )
 
 var (
@@ -20,16 +20,16 @@ type Service interface {
 
 type service struct {
 	animalURLs map[string]string
-	rdb      *redis.Client
+	rdb        *redis.Client
 }
 
 // ServiceMiddleware is a chainable behavior modifier for Service.
 type ServiceMiddleware func(Service) Service
 
 func New(animalURLs map[string]string, redisClient *redis.Client) Service {
-	return service {
+	return service{
 		animalURLs: animalURLs,
-		rdb: redisClient,
+		rdb:        redisClient,
 	}
 }
 
@@ -42,6 +42,7 @@ func (s service) Scrape(ctx context.Context, animal string) ([]string, error) {
 	}
 
 	key := fmt.Sprintf("facts:%s", animal)
+	s.rdb.SAdd(ctx, "animals", animal)
 
 	switch animal {
 	case "elephant-seal":

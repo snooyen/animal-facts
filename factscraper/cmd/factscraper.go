@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	flag "github.com/spf13/pflag"
 	"github.com/go-redis/redis/v8"
+	flag "github.com/spf13/pflag"
 
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
@@ -16,17 +16,17 @@ import (
 )
 
 var (
-	animals = map[string]string {
+	animals = map[string]string{
 		"elephant-seal": "https://elephantseal.org/about-the-seals/",
 	}
 
 	// commandline flags
-	versionInfo    = flag.Bool("version", false, "prints the version information")
-	port = flag.String("port", "3000", "Port to service requests on")
-	redisHost = flag.String("redisHost", "localhost", "Hostname/address of redis")
-	redisPort = flag.String("redisPort", "6379", "Port with which to connect to redis")
+	versionInfo   = flag.Bool("version", false, "prints the version information")
+	port          = flag.String("port", "3000", "Port to service requests on")
+	redisHost     = flag.String("redisHost", "localhost", "Hostname/address of redis")
+	redisPort     = flag.String("redisPort", "6379", "Port with which to connect to redis")
 	redisPassword = flag.String("redisPassword", "password123!", "Password to authenticate to redis")
-	redisDB = flag.Int("redisDB", 0, "Redis DB id")
+	redisDB       = flag.Int("redisDB", 0, "Redis DB id")
 )
 
 func main() {
@@ -48,9 +48,9 @@ func main() {
 	}
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:	  fmt.Sprintf("%s:%s", *redisHost, *redisPort),
+		Addr:     fmt.Sprintf("%s:%s", *redisHost, *redisPort),
 		Password: *redisPassword,
-		DB:		  *redisDB,
+		DB:       *redisDB,
 	})
 
 	// Create Scraper Service
