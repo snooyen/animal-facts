@@ -43,8 +43,10 @@ func main() {
 		os.Exit(0)
 	}
 
+	redisAddr := fmt.Sprintf("%s:%s", *redisHost, *redisPort)
+	logger.Log("redisAddr", redisAddr, "redisDB", *redisDB)
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", *redisHost, *redisPort),
+		Addr:     redisAddr,
 		Password: *redisPassword,
 		DB:       *redisDB,
 	})
