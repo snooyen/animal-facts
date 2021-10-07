@@ -16,6 +16,7 @@ spec:
       containers:
       - name: fact-scraper
         image: ghcr.io/snooyen/animal-facts/fact-scraper:main
+        imagePullPolicy: Always
         command:
           - fact-scraper
           - --port=3000

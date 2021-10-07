@@ -12,7 +12,7 @@ type scrapeRequest struct {
 
 type scrapeResponse struct {
 	Visited []string `json:visited"`
-	Err string `json:"err,omitempty"`
+	Err     string   `json:"err,omitempty"`
 }
 
 func DecodeScrapeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
