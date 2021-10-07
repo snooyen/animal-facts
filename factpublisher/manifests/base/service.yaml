@@ -1,0 +1,13 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: fact-publisher
+spec:
+  selector:
+    deployment: fact-publisher
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 3001
+    targetPort: 3001

@@ -4,8 +4,8 @@ import (
 	"strconv"
 
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
-	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/kustomize"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/kustomize"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
@@ -14,6 +14,13 @@ import (
 const (
 	bitnamiHelmRepo = `https://charts.bitnami.com/bitnami`
 	redisChart      = `redis`
+)
+
+var (
+	services = []string{
+		"fact-scraper",
+		"fact-publisher",
+	}
 )
 
 func main() {
@@ -47,16 +54,11 @@ func main() {
 			return err
 		}
 
-		// Deploy FactScraper Service
-		factScraperConfig := config.New(ctx, "fact-scraper")
-		factScraperOverlay := factScraperConfig.Require("overlay")
-		_, err = kustomize.NewDirectory(ctx, "fact-scraper",
-			kustomize.DirectoryArgs{
-				Directory: pulumi.String(factScraperOverlay),
-			},
-		)
-		if err != nil {
-			return err
+		for _, service := range services {
+			err = DeployServiceOverlay(ctx, service)
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -90,4 +92,15 @@ func DeployRedisChart(ctx *pulumi.Context, values RedisValues) error {
 	}
 
 	return nil
+}
+
+func DeployServiceOverlay(ctx *pulumi.Context, service string) (err error) {
+	config := config.New(ctx, service)
+	overlay := config.Require("overlay")
+	_, err = kustomize.NewDirectory(ctx, service,
+		kustomize.DirectoryArgs{
+			Directory: pulumi.String(overlay),
+		},
+	)
+	return
 }
