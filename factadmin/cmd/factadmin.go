@@ -8,10 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-kit/kit/log"
 	"github.com/go-redis/redis/v8"
 	flag "github.com/spf13/pflag"
-
-	"github.com/go-kit/kit/log"
+	"github.com/twilio/twilio-go"
 
 	"github.com/snooyen/elephant-seal-facts/factadmin/pkg/admin"
 	"github.com/snooyen/elephant-seal-facts/factadmin/pkg/version"
@@ -20,6 +20,7 @@ import (
 var (
 	// commandline flags
 	versionInfo   = flag.Bool("version", false, "prints the version information")
+	host          = flag.String("host", "localhost", "service hostname")
 	port          = flag.String("port", "3002", "Port to service requests on")
 	redisHost     = flag.String("redisHost", "localhost", "Hostname/address of redis")
 	redisPort     = flag.String("redisPort", "6379", "Port with which to connect to redis")
@@ -30,7 +31,7 @@ var (
 func main() {
 	// Parse commandline flags
 	flag.Parse()
-	listen := fmt.Sprintf(":%s", *port)
+	listen := fmt.Sprintf("%s:%s", *host, *port)
 
 	var logger log.Logger
 	logger = log.NewLogfmtLogger(os.Stderr)
@@ -54,6 +55,9 @@ func main() {
 		DB:       *redisDB,
 	})
 
+	// Initialize Twilio Client
+	twilioClient := twilio.NewRestClient()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	// signalChan will catch SIGINT and SIGTERM and allow the parser to cleanup before exiting the program
 	signalChan := make(chan os.Signal, 1)
@@ -64,7 +68,7 @@ func main() {
 	}()
 
 	// Create admin Service
-	s := admin.New(rdb, logger)
+	s := admin.New(rdb, twilioClient, logger)
 	s = admin.LoggingMiddleware(logger)(s)
 
 	httpServer := http.Server{

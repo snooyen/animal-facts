@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/go-kit/log"
 	"github.com/go-redis/redis/v8"
+	"github.com/twilio/twilio-go"
+	openapi "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
 var (
@@ -27,15 +30,17 @@ type Service interface {
 
 type service struct {
 	rdb    *redis.Client
+	twilio *twilio.RestClient
 	logger log.Logger
 }
 
 // ServiceMiddleware is a chainable behavior modifier for Service.
 type ServiceMiddleware func(Service) Service
 
-func New(redisClient *redis.Client, logger log.Logger) (s Service) {
+func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.Logger) (s Service) {
 	s = service{
 		rdb:    redisClient,
+		twilio: twilioClient,
 		logger: logger,
 	}
 
@@ -105,6 +110,27 @@ func (s service) subscribeApprovalChannel(ctx context.Context, animal string) {
 			return
 		default:
 			s.logger.Log("msg", "received message", "subscription", chanName, "text", fmt.Sprintf("%+v", msg))
+			resp, err := s.sendTextForApproval(fmt.Sprintf("%+v", msg))
+			s.logger.Log("msg", "sent text for approval", "subscription", chanName, "response", resp, "err", err)
+
 		}
 	}
+}
+
+func (s service) sendTextForApproval(msg string) (string, error) {
+	from := "(805) 500-0105"
+	to := "(626) 607-7393"
+
+	params := &openapi.CreateMessageParams{}
+	params.SetTo(to)
+	params.SetFrom(from)
+	params.SetBody(msg)
+
+	resp, err := s.twilio.ApiV2010.CreateMessage(params)
+	if err != nil {
+		return "", err
+	}
+	response, _ := json.Marshal(*resp)
+
+	return string(response), err
 }
