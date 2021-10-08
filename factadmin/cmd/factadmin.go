@@ -54,7 +54,6 @@ func main() {
 		DB:       *redisDB,
 	})
 
-
 	ctx, cancel := context.WithCancel(context.Background())
 	// signalChan will catch SIGINT and SIGTERM and allow the parser to cleanup before exiting the program
 	signalChan := make(chan os.Signal, 1)
@@ -69,7 +68,7 @@ func main() {
 	s = admin.LoggingMiddleware(logger)(s)
 
 	httpServer := http.Server{
-		Addr: listen,
+		Addr:    listen,
 		Handler: admin.NewHTTPHandler(s),
 	}
 

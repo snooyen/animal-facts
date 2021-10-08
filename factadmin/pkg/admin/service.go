@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	ErrInvalidFactFormat = errors.New("Invalid Fact Format (should be <SCORE>:<FACT>)")
+	ErrInvalidFactFormat         = errors.New("Invalid Fact Format (should be <SCORE>:<FACT>)")
 	ErrAnimalUnsupported         = errors.New("Unsupported Animal")
 	ErrApprovalActionUnsupported = errors.New("Unsupported Action")
 )
@@ -26,7 +26,7 @@ type Service interface {
 }
 
 type service struct {
-	rdb *redis.Client
+	rdb    *redis.Client
 	logger log.Logger
 }
 
@@ -35,7 +35,7 @@ type ServiceMiddleware func(Service) Service
 
 func New(redisClient *redis.Client, logger log.Logger) (s Service) {
 	s = service{
-		rdb: redisClient,
+		rdb:    redisClient,
 		logger: logger,
 	}
 
@@ -101,10 +101,10 @@ func (s service) subscribeApprovalChannel(ctx context.Context, animal string) {
 		<-rateLimit
 		s.logger.Log("msg", "tick", "subscription", chanName, "time", time.Now())
 		select {
-			case <-ctx.Done():
-				return
-			default:
-				s.logger.Log("msg", "received message", "subscription", chanName, "text", fmt.Sprintf("%+v", msg))
+		case <-ctx.Done():
+			return
+		default:
+			s.logger.Log("msg", "received message", "subscription", chanName, "text", fmt.Sprintf("%+v", msg))
 		}
 	}
 }
