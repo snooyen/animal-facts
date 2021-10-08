@@ -1,0 +1,33 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fact-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: fact-admin
+  template:
+    metadata:
+      labels:
+        deployment: fact-admin
+    spec:
+      containers:
+      - name: fact-admin
+        image: ghcr.io/snooyen/animal-facts/fact-admin:main
+        imagePullPolicy: Always
+        command:
+          - fact-admin
+          - --port=3002
+          - --redisHost=redis-headless
+          - --redisPassword=$(REDIS_PASSWORD)
+        ports:
+        - containerPort: 3002
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis
+              key: redis-password
+
