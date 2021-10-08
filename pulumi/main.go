@@ -20,6 +20,7 @@ var (
 	services = []string{
 		"fact-scraper",
 		"fact-publisher",
+		"fact-admin",
 	}
 )
 
