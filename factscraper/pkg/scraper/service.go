@@ -9,6 +9,14 @@ import (
 	"github.com/gocolly/colly"
 )
 
+const (
+	animalSetKey        = "animals"
+	factsSetKey = "facts"
+	nextFIDKey          = "next_fid"
+	animalFactSetPrefix = "facts:"
+	factHashPrefix      = "fact:"
+)
+
 var (
 	ErrAnimalUnsupported = errors.New("Unsupported Animal")
 )
@@ -33,16 +41,20 @@ func New(animalURLs map[string]string, redisClient *redis.Client) Service {
 	}
 }
 
-func (s service) Scrape(ctx context.Context, animal string) ([]string, error) {
-	var visited []string
+func (s service) Scrape(ctx context.Context, animal string) (visited []string, err error) {
 
+	// Check if animal is supported
 	url, ok := s.animalURLs[animal]
 	if !ok {
-		return visited, ErrAnimalUnsupported
+		err = ErrAnimalUnsupported
+		return
 	}
 
-	key := fmt.Sprintf("facts:%s", animal)
-	s.rdb.SAdd(ctx, "animals", animal)
+	// store animal name in animal set
+	err = s.rdb.SAdd(ctx, animalSetKey, animal).Err()
+	if err != nil {
+		return
+	}
 
 	switch animal {
 	case "elephant-seal":
@@ -58,8 +70,15 @@ func (s service) Scrape(ctx context.Context, animal string) ([]string, error) {
 		})
 
 		c.OnHTML("div.et_pb_text_inner", func(e *colly.HTMLElement) {
-			tP := e.ChildText("p")
-			s.rdb.ZAdd(ctx, key, &redis.Z{0, tP})
+			factText := e.ChildText("p")
+
+			// REDIS: Check if Fact Exists
+			factExists, err := s.rdb.SIsMember(ctx, factsSetKey, factText).Result()
+			if err != nil {
+				return
+			} else if factExists == false {
+				s.addFact(ctx, factText, animal)
+			}
 		})
 
 		c.OnRequest(func(r *colly.Request) {
@@ -71,4 +90,31 @@ func (s service) Scrape(ctx context.Context, animal string) ([]string, error) {
 	}
 
 	return visited, nil
+}
+
+func (s service) addFact(ctx context.Context, factText string, animal string) (err error) {
+	// get next fact id
+	thisFID, err := s.rdb.Incr(ctx, nextFIDKey).Result()
+	if err != nil {
+		return
+	}
+	// store fact in facts hash
+	key := fmt.Sprintf("%s%d", factHashPrefix, thisFID)
+	hashFields := map[string]interface{}{
+		"Animal": animal,
+		"Fact":   factText,
+	}
+	err = s.rdb.HSet(ctx, key, hashFields).Err()
+	if err != nil {
+		return
+	}
+
+	// add fact id to animal fact set
+	key = fmt.Sprintf("%s%s", animalFactSetPrefix, animal)
+	err = s.rdb.SAdd(ctx, key, thisFID).Err()
+	if err != nil {
+		return
+	}
+
+	return
 }
