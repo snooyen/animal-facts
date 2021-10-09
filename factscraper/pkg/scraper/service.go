@@ -11,7 +11,7 @@ import (
 
 const (
 	animalSetKey        = "animals"
-	factsSetKey = "facts"
+	factsSetKey         = "facts"
 	nextFIDKey          = "next_fid"
 	animalFactSetPrefix = "facts:"
 	factHashPrefix      = "fact:"
@@ -72,11 +72,16 @@ func (s service) Scrape(ctx context.Context, animal string) (visited []string, e
 		c.OnHTML("div.et_pb_text_inner", func(e *colly.HTMLElement) {
 			factText := e.ChildText("p")
 
-			// REDIS: Check if Fact Exists
+			// REDIS: Check if Fact Exists or if facts set is empty
+			factSetCard, err := s.rdb.SCard(ctx, factsSetKey).Result()
+			if err != nil {
+				return
+			}
 			factExists, err := s.rdb.SIsMember(ctx, factsSetKey, factText).Result()
 			if err != nil {
 				return
-			} else if factExists == false {
+			}
+			if factExists == false || factSetCard == 0 {
 				s.addFact(ctx, factText, animal)
 			}
 		})
@@ -93,6 +98,12 @@ func (s service) Scrape(ctx context.Context, animal string) (visited []string, e
 }
 
 func (s service) addFact(ctx context.Context, factText string, animal string) (err error) {
+	// Add fact to master fact set
+	err = s.rdb.SAdd(ctx, factsSetKey, factText).Err()
+	if err != nil {
+		return
+	}
+
 	// get next fact id
 	thisFID, err := s.rdb.Incr(ctx, nextFIDKey).Result()
 	if err != nil {
