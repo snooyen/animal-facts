@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-kit/kit/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/gocolly/colly"
 )
@@ -27,6 +28,7 @@ type Service interface {
 }
 
 type service struct {
+	logger     log.Logger
 	animalURLs map[string]string
 	rdb        *redis.Client
 }
@@ -34,10 +36,11 @@ type service struct {
 // ServiceMiddleware is a chainable behavior modifier for Service.
 type ServiceMiddleware func(Service) Service
 
-func New(animalURLs map[string]string, redisClient *redis.Client) Service {
+func New(animalURLs map[string]string, redisClient *redis.Client, logger log.Logger) Service {
 	return service{
 		animalURLs: animalURLs,
 		rdb:        redisClient,
+		logger:     logger,
 	}
 }
 
@@ -127,5 +130,12 @@ func (s service) addFact(ctx context.Context, factText string, animal string) (e
 		return
 	}
 
+	s.logger.Log(
+		"method", "scrape",
+		"animal", animal,
+		"msg", "new fact added",
+		"fid", thisFID,
+		"fact", factText,
+	)
 	return
 }
