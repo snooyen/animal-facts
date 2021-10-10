@@ -1,13 +1,13 @@
 GO_FILES=$(shell go list ./...)
-BUILD_OUTPUT ?= "_output/fact-scraper"
+BUILD_OUTPUT ?= "bin/animal-facts"
 
 BUILD_DATE=$$(date +%Y-%m-%d-%H:%M)
 BUILD_VERSION=0.0.1
-BUILD_DATE_VAR := github.com/snooyen/elephant-seal-facts/factscraper/pkg/version.BuildDate
-BUILD_VERSION_VAR := github.com/snooyen/elephant-seal-facts/factscraper/pkg/version.BuildVersion
+BUILD_DATE_VAR := github.com/snooyen/animal-facts/facts/pkg/version.BuildDate
+BUILD_VERSION_VAR := github.com/snooyen/animal-facts/facts/pkg/version.BuildVersion
 LDFLAGS ?= "-X $(BUILD_DATE_VAR)=$(BUILD_DATE) -X $(BUILD_VERSION_VAR)=$(BUILD_VERSION)"
 
-DOCKER_IMAGE = snooyen/fact-scraper
+DOCKER_IMAGE = snooyen/animal-facts
 DOCKER_CLI_EXPERIMENTAL = enabled
 export GOPATH DOCKER_CLI_EXPERIMENTAL
 
