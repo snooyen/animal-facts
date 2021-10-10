@@ -123,9 +123,12 @@ func (s service) addFact(ctx context.Context, factText string, animal string) (e
 		return
 	}
 
-	// add fact id to animal fact set
+	// add fact id to animal fact sorted set
 	key = fmt.Sprintf("%s%s", animalFactSetPrefix, animal)
-	err = s.rdb.SAdd(ctx, key, thisFID).Err()
+	z := redis.Z{
+		Member: thisFID,
+	}
+	err = s.rdb.ZAdd(ctx, key, &z).Err()
 	if err != nil {
 		return
 	}
