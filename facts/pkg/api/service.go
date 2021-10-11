@@ -33,6 +33,7 @@ type service struct {
 
 var (
 	ErrNotFound = errors.New("Fact not found")
+	ErrAlreadyExists = errors.New("Fact Already Exists")
 
 	animalsSetKey    = "animals"
 	masterFactSetKey = "facts"
@@ -49,6 +50,15 @@ func New(redisClient *redis.Client, logger log.Logger) Service {
 }
 
 func (s service) CreateFact(ctx context.Context, animal string, factText string) (err error) {
+	// Check if Fact Already Exists
+	factExists, err := s.rdb.SIsMember(ctx, masterFactSetKey, factText).Result()
+	if err != nil {
+		return
+	}
+	if factExists {
+		return ErrAlreadyExists
+	}
+
 	// Add fact to master fact set
 	err = s.rdb.SAdd(ctx, masterFactSetKey, factText).Err()
 	if err != nil {
