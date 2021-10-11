@@ -82,6 +82,11 @@ func (s service) CreateFact(ctx context.Context, animal string, factText string)
 		return
 	}
 
+	err = s.rdb.SAdd(ctx, animalsSetKey, animal).Err()
+	if err != nil {
+		return
+	}
+
 	return
 }
 

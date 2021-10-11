@@ -32,10 +32,16 @@ func main() {
 	// Parse commandline flags
 	flag.Parse()
 	httpListen := fmt.Sprintf(":%s", *httpListenPort)
-	//grpcListen := fmt.Sprintf(":%s", *grpcListenPort)
+	grpcListen := fmt.Sprintf(":%s", *grpcListenPort)
 
+	// Create logger to pass to components
 	var logger log.Logger
-	logger = log.NewLogfmtLogger(os.Stderr)
+	{
+		logger = log.NewLogfmtLogger(os.Stderr)
+		logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+		logger = log.With(logger, "caller", log.DefaultCaller)
+	}
+
 	// --version: print version info
 	var err error
 	if *versionInfo {
@@ -56,15 +62,21 @@ func main() {
 		service     = api.New(rdb, logger)
 		endpoints   = api.MakeServerEndpoints(service)
 		httpHandler = api.NewHTTPHandler(endpoints, logger)
-		//grpcServer  = api.NewGRPCServer(endpoints, logger)
+		grpcServer  = api.NewGRPCServer(endpoints, logger)
 	)
 
-	//grpcErr := make(chan error)
+	grpcErr := make(chan error)
 	httpErr := make(chan error)
-	//grpcListener := listenGRPC(grpcListen, grpcServer, logger, grpcErr)
+	listenGRPC(grpcListen, grpcServer, logger, grpcErr)
 	listenHTTP(httpListen, httpHandler, logger, httpErr)
 
-	logger.Log("exit", <-httpErr)
+	select {
+	case <-httpErr:
+		logger.Log("exit", <-httpErr)
+	case <-grpcErr:
+		logger.Log("exit", <-grpcErr)
+	}
+
 }
 
 func listenGRPC(grpcAddr string, grpcServer pb.FactsServer, logger log.Logger, errChan chan error) net.Listener {

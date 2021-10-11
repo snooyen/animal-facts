@@ -64,8 +64,8 @@ func MakeGetRandAnimalFactEndpoint(s Service) endpoint.Endpoint {
 }
 
 type createFactRequest struct {
-	Animal string
-	Fact   string
+	Animal string `json:"Animal"`
+	Fact   string `json:"Fact"`
 }
 
 type createFactResponse struct {

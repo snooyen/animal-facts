@@ -69,9 +69,11 @@ func NewHTTPHandler(endpoints Endpoints, logger log.Logger) http.Handler {
 }
 
 func decodeHTTPCreateFactRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	request = createFactRequest{}
-	err = json.NewDecoder(r.Body).Decode(&request)
-	return
+	var req createFactRequest
+	if e := json.NewDecoder(r.Body).Decode(&req); e != nil {
+		return nil, e
+	}
+	return req, nil
 }
 
 func decodeHTTPGetAnimalsRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
