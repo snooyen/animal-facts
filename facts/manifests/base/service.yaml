@@ -8,9 +8,11 @@ spec:
     deployment: facts-api
   type: ClusterIP
   ports:
-  - protocol: TCP
+  - name: http
+    protocol: TCP
     port: 3080
     targetPort: 3080
-  - protocol: TCP
+  - name: grpc
+    protocol: TCP
     port: 3081
     targetPort: 3081
