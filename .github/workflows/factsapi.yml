@@ -1,4 +1,4 @@
-name: Build facts api
+name: Build facts-api
 
 on:
   push:
