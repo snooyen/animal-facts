@@ -20,10 +20,10 @@ type Service interface {
 }
 
 type Fact struct {
-	Animal  string `json:"animal,omitempty" redis:"Animal,omitempty"`
-	Fact    string `json:"fact,omitempty" redis:"Fact,omitempty"`
+	Animal  string `json:"animal" redis:"Animal"`
+	Fact    string `json:"fact" redis:"Fact"`
 	ID      int64  `json:"id"`
-	deleted bool   `json:"deleted" redis:"Deleted,omitempty"`
+	deleted bool   `json:"deleted" redis:"Deleted"`
 }
 
 type service struct {
@@ -32,6 +32,8 @@ type service struct {
 }
 
 var (
+	ErrNotFound = errors.New("Fact not found")
+
 	animalsSetKey    = "animals"
 	masterFactSetKey = "facts"
 	nextFactIDKey    = "next_fid"
@@ -39,6 +41,7 @@ var (
 )
 
 func New(redisClient *redis.Client, logger log.Logger) Service {
+	logger.Log("msg", "created fact service")
 	return &service{
 		rdb:    redisClient,
 		logger: logger,
@@ -86,7 +89,11 @@ func (s service) CreateFact(ctx context.Context, animal string, factText string)
 func (s service) GetFact(ctx context.Context, ufid int64) (Fact, error) {
 	fact := Fact{ID: ufid}
 	key := fmt.Sprintf("%s%d", factHashPrefix, ufid)
-	err := s.rdb.HGetAll(ctx, key).Scan(fact)
+	err := s.rdb.HGetAll(ctx, key).Scan(&fact)
+	if fact.Fact == "" {
+		return fact, ErrNotFound
+	}
+
 	return fact, err
 }
 
@@ -103,13 +110,15 @@ func (s service) GetAnimals(ctx context.Context) ([]string, error) {
 
 // GetRandAnimalFact returns a random fact for a given animal
 func (s service) GetRandAnimalFact(ctx context.Context, animal string) (Fact, error) {
-	fact := Fact{}
+	var fact Fact
 	result, err := s.rdb.ZRandMember(ctx, animal, 1, false).Result()
-	factID, _ := strconv.Atoi(result[0])
+	if err != nil {
+		return fact, err
+	}
+	factID, err := strconv.Atoi(result[0])
 	if err != nil {
 		return fact, err
 	}
 	fact, err = s.GetFact(ctx, int64(factID))
-
 	return fact, err
 }

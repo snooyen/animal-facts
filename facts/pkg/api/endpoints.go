@@ -27,7 +27,7 @@ func MakeServerEndpoints(s Service) Endpoints {
 func MakeCreateFactEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(createFactRequest)
-		e := s.CreateFact(ctx, req.Fact.Animal, req.Fact.Fact)
+		e := s.CreateFact(ctx, req.Animal, req.Fact)
 		return createFactResponse{Err: e}, nil
 	}
 }
@@ -49,7 +49,7 @@ func MakeDeleteFactEndpoint(s Service) endpoint.Endpoint {
 }
 
 func MakeGetAnimalsEndpoint(s Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+	return func(ctx context.Context, _ interface{}) (response interface{}, err error) {
 		animals, e := s.GetAnimals(ctx)
 		return getAnimalsResponse{Animals: animals, Err: e}, nil
 	}
@@ -64,12 +64,15 @@ func MakeGetRandAnimalFactEndpoint(s Service) endpoint.Endpoint {
 }
 
 type createFactRequest struct {
-	Fact Fact
+	Animal string
+	Fact   string
 }
 
 type createFactResponse struct {
 	Err error `json:"err,omitempty"`
 }
+
+func (r createFactResponse) error() error { return r.Err }
 
 type getFactRequest struct {
 	ID int64
@@ -80,6 +83,8 @@ type getFactResponse struct {
 	Err  error `json:"err,omitempty"`
 }
 
+func (r getFactResponse) error() error { return r.Err }
+
 type deleteFactRequest struct {
 	ID int64
 }
@@ -88,10 +93,14 @@ type deleteFactResponse struct {
 	Err error `json:"err,omitempty"`
 }
 
+func (r deleteFactResponse) error() error { return r.Err }
+
 type getAnimalsResponse struct {
 	Animals []string `json:"animals"`
 	Err     error    `json:"err,omitempty"`
 }
+
+func (r getAnimalsResponse) error() error { return r.Err }
 
 type getRandAnimalFactRequest struct {
 	Animal string
@@ -101,3 +110,5 @@ type getRandAnimalFactResponse struct {
 	Fact Fact
 	Err  error `json:"err,omitempty"`
 }
+
+func (r getRandAnimalFactResponse) error() error { return r.Err }

@@ -1,18 +1,52 @@
 syntax = "proto3";
+import "google/protobuf/empty.proto";
+option go_package = "module github.com/snooyen/animal-facts/facts/pb";
 
-option go_package = "module github.com/snooyen/animal-facts/facts";
-
-package facts;
-
-service facts {
-    rpc CreateFact(Fact) returns (FactID);
+service Facts {
+    rpc CreateFact(CreateFactRequest) returns (CreateFactReply);
+    rpc GetFact(GetFactRequest) returns (GetFactReply);
+    rpc DeleteFact(DeleteFactRequest) returns (DeleteFactReply);
+    rpc GetAnimals(google.protobuf.Empty) returns (GetAnimalsReply);
+    rpc GetRandAnimalFact(GetRandAnimalFactRequest) returns (GetRandAnimalFactReply);
 }
 
-message FactID {
-    int64 Fact = 1;
+message CreateFactRequest {
+    string Animal = 1;
+    string Fact = 2;
 }
 
-message Fact{
+message CreateFactReply {
+    string Err = 1;
+}
+
+message GetFactRequest {
+    int64 ID = 1;
+}
+
+message GetFactReply {
     string Fact = 1;
+    string Err = 2;
 }
 
+
+message DeleteFactRequest {
+    int64 ID = 1;
+}
+
+message DeleteFactReply {
+    string Err = 1;
+}
+
+message GetAnimalsReply {
+    repeated string Animals = 1;
+    string Err = 2;
+}
+
+message GetRandAnimalFactRequest {
+    string Animal = 1;
+}
+
+message GetRandAnimalFactReply {
+    string Fact = 1;
+    string Err = 2;
+}
