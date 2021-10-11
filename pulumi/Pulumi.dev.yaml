@@ -1,4 +1,5 @@
 config:
+  animal-facts:overlay: ../facts/manifests/overlays/dev
   fact-scraper:overlay: ../factscraper/manifests/overlays/dev
   fact-publisher:overlay: ../factpublisher/manifests/overlays/dev
   kubernetes:context: lke39117-ctx
