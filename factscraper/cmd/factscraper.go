@@ -54,7 +54,7 @@ func main() {
 	})
 
 	// Create Scraper Service
-	s := scraper.New(animals, rdb)
+	s := scraper.New(animals, rdb, logger)
 	s = scraper.LoggingMiddleware(logger)(s)
 
 	// Register Scraper Service Handlers
