@@ -4,15 +4,15 @@ on:
   push:
     paths:
       - 'facts/**'
-      - '.github/workflows/facts.yml'
+      - '.github/workflows/factsapi.yml'
   pull_request:
     paths:
       - 'facts/**'
-      - '.github/workflows/facts.yml'
+      - '.github/workflows/factsapi.yml'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/fact-scraper
+  IMAGE_NAME: ${{ github.repository }}/animal-facts
   BUILD_VERSION: 0.0.1
   BUILD_DATE_VAR: github.com/snooyen/animal-facts/facts/pkg/version.BuildDate
   BUILD_VERSION_VAR: github.com/snooyen/animal-facts/facts/pkg/version.BuildVersion
