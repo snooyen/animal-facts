@@ -2,10 +2,10 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: animal-facts
+  name: facts-api
 spec:
   selector:
-    deployment: animal-facts
+    deployment: facts-api
   type: ClusterIP
   ports:
   - protocol: TCP

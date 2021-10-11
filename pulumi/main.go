@@ -18,7 +18,7 @@ const (
 
 var (
 	services = []string{
-		"animal-facts",
+		"facts-api",
 		"fact-scraper",
 		"fact-publisher",
 	}

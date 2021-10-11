@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: animal-facts
+  name: facts-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      deployment: animal-facts
+      deployment: facts-api
   template:
     metadata:
       labels:
-        deployment: animal-facts
+        deployment: facts-api
     spec:
       containers:
-      - name: animal-facts
-        image: ghcr.io/snooyen/animal-facts/animal-facts:main
+      - name: facts-api
+        image: ghcr.io/snooyen/animal-facts/facts-api:main
         imagePullPolicy: Always
         command:
-          - animal-facts
+          - facts-api
           - --redisHost=redis-headless
           - --redisPassword=$(REDIS_PASSWORD)
         ports:
