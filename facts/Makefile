@@ -30,7 +30,7 @@ setup: clean
 	$Q go env
 
 clean:
-	-rm -rf _output
+	-rm -rf bin
 
 .PHONY: mod
 mod:

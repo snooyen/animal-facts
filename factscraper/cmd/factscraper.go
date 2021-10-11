@@ -11,8 +11,8 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 
-	"github.com/snooyen/elephant-seal-facts/factscraper/pkg/scraper"
-	"github.com/snooyen/elephant-seal-facts/factscraper/pkg/version"
+	"github.com/snooyen/animal-facts/factscraper/pkg/scraper"
+	"github.com/snooyen/animal-facts/factscraper/pkg/version"
 )
 
 var (

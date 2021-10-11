@@ -75,18 +75,7 @@ func (s service) Scrape(ctx context.Context, animal string) (visited []string, e
 		c.OnHTML("div.et_pb_text_inner", func(e *colly.HTMLElement) {
 			factText := e.ChildText("p")
 
-			// REDIS: Check if Fact Exists or if facts set is empty
-			factSetCard, err := s.rdb.SCard(ctx, factsSetKey).Result()
-			if err != nil {
-				return
-			}
-			factExists, err := s.rdb.SIsMember(ctx, factsSetKey, factText).Result()
-			if err != nil {
-				return
-			}
-			if factExists == false || factSetCard == 0 {
-				s.addFact(ctx, factText, animal)
-			}
+			s.logger.Log("msg", factText)
 		})
 
 		c.OnRequest(func(r *colly.Request) {
@@ -98,47 +87,4 @@ func (s service) Scrape(ctx context.Context, animal string) (visited []string, e
 	}
 
 	return visited, nil
-}
-
-func (s service) addFact(ctx context.Context, factText string, animal string) (err error) {
-	// Add fact to master fact set
-	err = s.rdb.SAdd(ctx, factsSetKey, factText).Err()
-	if err != nil {
-		return
-	}
-
-	// get next fact id
-	thisFID, err := s.rdb.Incr(ctx, nextFIDKey).Result()
-	if err != nil {
-		return
-	}
-	// store fact in facts hash
-	key := fmt.Sprintf("%s%d", factHashPrefix, thisFID)
-	hashFields := map[string]interface{}{
-		"Animal": animal,
-		"Fact":   factText,
-	}
-	err = s.rdb.HSet(ctx, key, hashFields).Err()
-	if err != nil {
-		return
-	}
-
-	// add fact id to animal fact sorted set
-	key = fmt.Sprintf("%s%s", animalFactSetPrefix, animal)
-	z := redis.Z{
-		Member: thisFID,
-	}
-	err = s.rdb.ZAdd(ctx, key, &z).Err()
-	if err != nil {
-		return
-	}
-
-	s.logger.Log(
-		"method", "scrape",
-		"animal", animal,
-		"msg", "new fact added",
-		"fid", thisFID,
-		"fact", factText,
-	)
-	return
 }

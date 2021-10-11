@@ -1,4 +1,4 @@
-module github.com/snooyen/elephant-seal-facts/factscraper
+module github.com/snooyen/animal-facts/factscraper
 
 go 1.17
 
