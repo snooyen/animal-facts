@@ -1,4 +1,4 @@
-module github.com/snooyen/elephant-seal-facts/factadmin
+module github.com/snooyen/animal-facts/factadmin
 
 go 1.17
 

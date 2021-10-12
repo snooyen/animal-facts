@@ -13,8 +13,8 @@ import (
 	flag "github.com/spf13/pflag"
 	"github.com/twilio/twilio-go"
 
-	"github.com/snooyen/elephant-seal-facts/factadmin/pkg/admin"
-	"github.com/snooyen/elephant-seal-facts/factadmin/pkg/version"
+	"github.com/snooyen/animal-facts/factadmin/pkg/admin"
+	"github.com/snooyen/animal-facts/factadmin/pkg/version"
 )
 
 var (
