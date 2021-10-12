@@ -18,6 +18,7 @@ import (
 var (
 	// commandline flags
 	versionInfo   = flag.Bool("version", false, "prints the version information")
+	factsApiAddr  = flag.String("factsApiAddr", "facts-api:3081", "Address of facts-api grpc server")
 	port          = flag.String("port", "3001", "Port to service requests on")
 	redisHost     = flag.String("redisHost", "localhost", "Hostname/address of redis")
 	redisPort     = flag.String("redisPort", "6379", "Port with which to connect to redis")
@@ -52,7 +53,7 @@ func main() {
 	})
 
 	// Create Publisher Service
-	s := publisher.New(rdb)
+	s := publisher.New(rdb, *factsApiAddr)
 	s = publisher.LoggingMiddleware(logger)(s)
 
 	// Register Publisher Service Handlers

@@ -7,6 +7,8 @@ import (
 	"strconv"
 
 	"github.com/go-redis/redis/v8"
+
+	pb "github.com/snooyen/animal-facts/facts/pb"
 )
 
 var (
@@ -19,52 +21,37 @@ type Service interface {
 }
 
 type service struct {
-	rdb *redis.Client
+	rdb   *redis.Client
+	facts pb.FactsClient
 }
 
 // ServiceMiddleware is a chainable behavior modifier for Service.
 type ServiceMiddleware func(Service) Service
 
-func New(redisClient *redis.Client) Service {
+func New(redisClient *redis.Client, factsApiAddr string) Service {
 	return service{
-		rdb: redisClient,
+		rdb:   redisClient,
+		facts: NewFactsClient(factsApiAddr),
 	}
 }
 
 func (s service) Publish(ctx context.Context, animal string) (response PublishResponse, err error) {
 	response = PublishResponse{}
 
-	disposalSetKey := fmt.Sprintf("disposal:s", animal)
-	z := s.popFact(ctx, animal)
-
-	// If fact is in disposal set, pop facts until we have a fact not in the disposal set.
-	for {
-		if s.rdb.SIsMember(ctx, disposalSetKey, z.Member).Val() {
-			z = s.popFact(ctx, animal)
-		} else {
-			break
-		}
+	req := pb.GetRandAnimalFactRequest{
+		Animal: animal,
 	}
 
-	response.Fact = z.Member.(string)
-	response.Score = z.Score
+	res, err := s.facts.GetRandAnimalFact(ctx, &req)
+	if err != nil {
+		return
+	}
+	response.Fact = res.Fact
 
 	// Send fact for approval
 	approvalChan := fmt.Sprintf("approvals:%s", animal)
 	approvalMsg := fmt.Sprintf("%s:%s", strconv.FormatFloat(response.Score, 'f', -1, 64), response.Fact)
 	err = s.rdb.Publish(ctx, approvalChan, approvalMsg).Err()
-
-	return
-}
-
-func (s service) popFact(ctx context.Context, animal string) (z redis.Z) {
-	// Pop a fact from the animal's fact set
-	// TODO: Handle unsupported animal(s)
-	// TODO: Handle empty fact set
-	factSetKey := fmt.Sprintf("facts:%s", animal)
-	r, _ := s.rdb.ZPopMin(ctx, factSetKey).Result()
-
-	z = r[0] // TODO: Will panic if fact set empty
 
 	return
 }
