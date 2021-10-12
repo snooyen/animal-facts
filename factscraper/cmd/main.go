@@ -11,8 +11,8 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 
-	"github.com/snooyen/elephant-seal-facts/factscraper/pkg/scraper"
-	"github.com/snooyen/elephant-seal-facts/factscraper/pkg/version"
+	"github.com/snooyen/animal-facts/factscraper/pkg/scraper"
+	"github.com/snooyen/animal-facts/factscraper/pkg/version"
 )
 
 var (
@@ -23,6 +23,7 @@ var (
 	// commandline flags
 	versionInfo   = flag.Bool("version", false, "prints the version information")
 	port          = flag.String("port", "3000", "Port to service requests on")
+	factsApiAddr  = flag.String("factsApiAddr", "facts-api:3081", "Address of facts-api grpc server")
 	redisHost     = flag.String("redisHost", "localhost", "Hostname/address of redis")
 	redisPort     = flag.String("redisPort", "6379", "Port with which to connect to redis")
 	redisPassword = flag.String("redisPassword", "password123!", "Password to authenticate to redis")
@@ -54,7 +55,7 @@ func main() {
 	})
 
 	// Create Scraper Service
-	s := scraper.New(animals, rdb, logger)
+	s := scraper.New(animals, rdb, logger, *factsApiAddr)
 	s = scraper.LoggingMiddleware(logger)(s)
 
 	// Register Scraper Service Handlers
