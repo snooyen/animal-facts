@@ -1,4 +1,4 @@
-module github.com/snooyen/elephant-seal-facts/factscraper
+module github.com/snooyen/animal-facts/factscraper
 
 go 1.17
 
@@ -6,7 +6,9 @@ require (
 	github.com/go-kit/kit v0.12.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gocolly/colly v1.2.0
+	github.com/snooyen/animal-facts/facts v0.0.0-20211011232309-8709db6c8163
 	github.com/spf13/pflag v1.0.5
+	google.golang.org/grpc v1.41.0
 )
 
 require (
@@ -26,7 +28,9 @@ require (
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
 	github.com/temoto/robotstxt v1.1.2 // indirect
 	golang.org/x/net v0.0.0-20211005001312-d4b1ae081e3b // indirect
+	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20210917145530-b395a37504d4 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 )

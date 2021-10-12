@@ -5,8 +5,11 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/go-kit/kit/log"
 	"github.com/go-redis/redis/v8"
 	"github.com/gocolly/colly"
+
+	pb "github.com/snooyen/animal-facts/facts/pb"
 )
 
 var (
@@ -19,30 +22,32 @@ type Service interface {
 }
 
 type service struct {
+	logger     log.Logger
 	animalURLs map[string]string
 	rdb        *redis.Client
+	facts      pb.FactsClient
 }
 
 // ServiceMiddleware is a chainable behavior modifier for Service.
 type ServiceMiddleware func(Service) Service
 
-func New(animalURLs map[string]string, redisClient *redis.Client) Service {
+func New(animalURLs map[string]string, redisClient *redis.Client, logger log.Logger, factsApiAddr string) Service {
 	return service{
 		animalURLs: animalURLs,
 		rdb:        redisClient,
+		logger:     logger,
+		facts:      NewFactsClient(factsApiAddr),
 	}
 }
 
-func (s service) Scrape(ctx context.Context, animal string) ([]string, error) {
-	var visited []string
+func (s service) Scrape(ctx context.Context, animal string) (visited []string, err error) {
 
+	// Check if animal is supported
 	url, ok := s.animalURLs[animal]
 	if !ok {
-		return visited, ErrAnimalUnsupported
+		err = ErrAnimalUnsupported
+		return
 	}
-
-	key := fmt.Sprintf("facts:%s", animal)
-	s.rdb.SAdd(ctx, "animals", animal)
 
 	switch animal {
 	case "elephant-seal":
@@ -58,8 +63,19 @@ func (s service) Scrape(ctx context.Context, animal string) ([]string, error) {
 		})
 
 		c.OnHTML("div.et_pb_text_inner", func(e *colly.HTMLElement) {
-			tP := e.ChildText("p")
-			s.rdb.ZAdd(ctx, key, &redis.Z{0, tP})
+			factText := e.ChildText("p")
+
+			req := pb.CreateFactRequest{
+				Animal: animal,
+				Fact:   factText,
+			}
+
+			s.logger.Log("msg", "scraped fact text", "fact", factText)
+			res, err := s.facts.CreateFact(ctx, &req)
+			if err != nil {
+				panic(err)
+			}
+			s.logger.Log("msg", "CreateFactReply", "err", res.Err)
 		})
 
 		c.OnRequest(func(r *colly.Request) {

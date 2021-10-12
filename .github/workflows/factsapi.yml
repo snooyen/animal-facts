@@ -1,21 +1,21 @@
-name: Build fact-scraper
+name: Build facts-api
 
 on:
   push:
     paths:
-      - 'factscraper/**'
-      - '.github/workflows/factscraper.yml'
+      - 'facts/**'
+      - '.github/workflows/factsapi.yml'
   pull_request:
     paths:
-      - 'factscraper/**'
-      - '.github/workflows/factscraper.yml'
+      - 'facts/**'
+      - '.github/workflows/factsapi.yml'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}/fact-scraper
+  IMAGE_NAME: ${{ github.repository }}/facts-api
   BUILD_VERSION: 0.0.1
-  BUILD_DATE_VAR: github.com/snooyen/animal-facts/factscraper/pkg/version.BuildDate
-  BUILD_VERSION_VAR: github.com/snooyen/animal-facts/factscraper/pkg/version.BuildVersion
+  BUILD_DATE_VAR: github.com/snooyen/animal-facts/facts/pkg/version.BuildDate
+  BUILD_VERSION_VAR: github.com/snooyen/animal-facts/facts/pkg/version.BuildVersion
 
 jobs:
   build-and-push-image:
@@ -51,7 +51,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
-          context: ./factscraper/
+          context: ./facts/
           build-args: |
             "LDFLAGS=-X ${{ env.BUILD_DATE_VAR }}=${{ steps.date.outputs.date }} -X ${{ env.BUILD_VERSION_VAR }}=${{ env.BUILD_VERSION }}"
           platforms: linux/amd64

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,18 +12,16 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 
-	"github.com/snooyen/elephant-seal-facts/factscraper/pkg/scraper"
-	"github.com/snooyen/elephant-seal-facts/factscraper/pkg/version"
+	"github.com/snooyen/animal-facts/factpublisher/pkg/publisher"
+	"github.com/snooyen/animal-facts/factpublisher/pkg/version"
 )
 
 var (
-	animals = map[string]string{
-		"elephant-seal": "https://elephantseal.org/about-the-seals/",
-	}
-
 	// commandline flags
 	versionInfo   = flag.Bool("version", false, "prints the version information")
-	port          = flag.String("port", "3000", "Port to service requests on")
+	factsApiAddr  = flag.String("factsApiAddr", "facts-api:3081", "Address of facts-api grpc server")
+	cronSchedule  = flag.String("schedule", "15 9 * * *", "cron schedule for publish jobs")
+	port          = flag.String("port", "3001", "Port to service requests on")
 	redisHost     = flag.String("redisHost", "localhost", "Hostname/address of redis")
 	redisPort     = flag.String("redisPort", "6379", "Port with which to connect to redis")
 	redisPassword = flag.String("redisPassword", "password123!", "Password to authenticate to redis")
@@ -35,8 +34,11 @@ func main() {
 	listen := fmt.Sprintf(":%s", *port)
 
 	var logger log.Logger
-	logger = log.NewLogfmtLogger(os.Stderr)
-	logger = log.With(logger, "listen", listen, "caller", log.DefaultCaller)
+	{
+		logger = log.NewLogfmtLogger(os.Stderr)
+		logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+		logger = log.With(logger, "caller", log.DefaultCaller)
+	}
 
 	// --version: print version info
 	var err error
@@ -47,24 +49,30 @@ func main() {
 		os.Exit(0)
 	}
 
+	redisAddr := fmt.Sprintf("%s:%s", *redisHost, *redisPort)
+	logger.Log("redisAddr", redisAddr, "redisDB", *redisDB)
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     fmt.Sprintf("%s:%s", *redisHost, *redisPort),
+		Addr:     redisAddr,
 		Password: *redisPassword,
 		DB:       *redisDB,
 	})
 
-	// Create Scraper Service
-	s := scraper.New(animals, rdb)
-	s = scraper.LoggingMiddleware(logger)(s)
+	// Create Publisher Service
+	s, err := publisher.New(context.Background(), rdb, logger, *factsApiAddr, *cronSchedule)
+	if err != nil {
+		logger.Log("err", err)
+		os.Exit(1)
+	}
+	s = publisher.LoggingMiddleware(logger)(s)
 
-	// Register Scraper Service Handlers
-	scrapeHandler := httptransport.NewServer(
-		scraper.MakeScrapeEndpoint(s),
-		scraper.DecodeScrapeRequest,
-		scraper.EncodeResponse,
+	// Register Publisher Service Handlers
+	publishHandler := httptransport.NewServer(
+		publisher.MakePublishEndpoint(s),
+		publisher.DecodePublishRequest,
+		publisher.EncodeResponse,
 	)
 
-	http.Handle("/scrape", scrapeHandler)
+	http.Handle("/publish", publishHandler)
 	logger.Log("msg", "HTTP", "addr", listen)
 	logger.Log("err", http.ListenAndServe(listen, nil))
 }

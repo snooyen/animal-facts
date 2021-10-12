@@ -18,6 +18,7 @@ const (
 
 var (
 	services = []string{
+		"facts-api",
 		"fact-scraper",
 		"fact-publisher",
 		"fact-admin",

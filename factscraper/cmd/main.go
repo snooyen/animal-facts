@@ -11,14 +11,19 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 
-	"github.com/snooyen/elephant-seal-facts/factpublisher/pkg/publisher"
-	"github.com/snooyen/elephant-seal-facts/factpublisher/pkg/version"
+	"github.com/snooyen/animal-facts/factscraper/pkg/scraper"
+	"github.com/snooyen/animal-facts/factscraper/pkg/version"
 )
 
 var (
+	animals = map[string]string{
+		"elephant-seal": "https://elephantseal.org/about-the-seals/",
+	}
+
 	// commandline flags
 	versionInfo   = flag.Bool("version", false, "prints the version information")
-	port          = flag.String("port", "3001", "Port to service requests on")
+	port          = flag.String("port", "3000", "Port to service requests on")
+	factsApiAddr  = flag.String("factsApiAddr", "facts-api:3081", "Address of facts-api grpc server")
 	redisHost     = flag.String("redisHost", "localhost", "Hostname/address of redis")
 	redisPort     = flag.String("redisPort", "6379", "Port with which to connect to redis")
 	redisPassword = flag.String("redisPassword", "password123!", "Password to authenticate to redis")
@@ -43,26 +48,24 @@ func main() {
 		os.Exit(0)
 	}
 
-	redisAddr := fmt.Sprintf("%s:%s", *redisHost, *redisPort)
-	logger.Log("redisAddr", redisAddr, "redisDB", *redisDB)
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisAddr,
+		Addr:     fmt.Sprintf("%s:%s", *redisHost, *redisPort),
 		Password: *redisPassword,
 		DB:       *redisDB,
 	})
 
-	// Create Publisher Service
-	s := publisher.New(rdb)
-	s = publisher.LoggingMiddleware(logger)(s)
+	// Create Scraper Service
+	s := scraper.New(animals, rdb, logger, *factsApiAddr)
+	s = scraper.LoggingMiddleware(logger)(s)
 
-	// Register Publisher Service Handlers
-	publishHandler := httptransport.NewServer(
-		publisher.MakePublishEndpoint(s),
-		publisher.DecodePublishRequest,
-		publisher.EncodeResponse,
+	// Register Scraper Service Handlers
+	scrapeHandler := httptransport.NewServer(
+		scraper.MakeScrapeEndpoint(s),
+		scraper.DecodeScrapeRequest,
+		scraper.EncodeResponse,
 	)
 
-	http.Handle("/publish", publishHandler)
+	http.Handle("/scrape", scrapeHandler)
 	logger.Log("msg", "HTTP", "addr", listen)
 	logger.Log("err", http.ListenAndServe(listen, nil))
 }

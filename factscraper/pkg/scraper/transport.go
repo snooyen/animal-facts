@@ -6,15 +6,6 @@ import (
 	"net/http"
 )
 
-type scrapeRequest struct {
-	Animal string
-}
-
-type scrapeResponse struct {
-	Visited []string `json:visited"`
-	Err     string   `json:"err,omitempty"`
-}
-
 func DecodeScrapeRequest(ctx context.Context, r *http.Request) (interface{}, error) {
 	var request scrapeRequest
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
