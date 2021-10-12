@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -11,13 +12,15 @@ import (
 	"github.com/go-kit/kit/log"
 	httptransport "github.com/go-kit/kit/transport/http"
 
-	"github.com/snooyen/elephant-seal-facts/factpublisher/pkg/publisher"
-	"github.com/snooyen/elephant-seal-facts/factpublisher/pkg/version"
+	"github.com/snooyen/animal-facts/factpublisher/pkg/publisher"
+	"github.com/snooyen/animal-facts/factpublisher/pkg/version"
 )
 
 var (
 	// commandline flags
 	versionInfo   = flag.Bool("version", false, "prints the version information")
+	factsApiAddr  = flag.String("factsApiAddr", "facts-api:3081", "Address of facts-api grpc server")
+	cronSchedule  = flag.String("schedule", "15 9 * * *", "cron schedule for publish jobs")
 	port          = flag.String("port", "3001", "Port to service requests on")
 	redisHost     = flag.String("redisHost", "localhost", "Hostname/address of redis")
 	redisPort     = flag.String("redisPort", "6379", "Port with which to connect to redis")
@@ -31,8 +34,11 @@ func main() {
 	listen := fmt.Sprintf(":%s", *port)
 
 	var logger log.Logger
-	logger = log.NewLogfmtLogger(os.Stderr)
-	logger = log.With(logger, "listen", listen, "caller", log.DefaultCaller)
+	{
+		logger = log.NewLogfmtLogger(os.Stderr)
+		logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+		logger = log.With(logger, "caller", log.DefaultCaller)
+	}
 
 	// --version: print version info
 	var err error
@@ -52,7 +58,11 @@ func main() {
 	})
 
 	// Create Publisher Service
-	s := publisher.New(rdb)
+	s, err := publisher.New(context.Background(), rdb, logger, *factsApiAddr, *cronSchedule)
+	if err != nil {
+		logger.Log("err", err)
+		os.Exit(1)
+	}
 	s = publisher.LoggingMiddleware(logger)(s)
 
 	// Register Publisher Service Handlers

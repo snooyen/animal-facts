@@ -23,7 +23,7 @@ type Fact struct {
 	Animal  string `json:"animal" redis:"Animal"`
 	Fact    string `json:"fact" redis:"Fact"`
 	ID      int64  `json:"id"`
-	deleted bool   `json:"deleted" redis:"Deleted"`
+	Deleted bool   `json:"deleted" redis:"Deleted"`
 }
 
 type service struct {
@@ -125,15 +125,34 @@ func (s service) GetAnimals(ctx context.Context) ([]string, error) {
 
 // GetRandAnimalFact returns a random fact for a given animal
 func (s service) GetRandAnimalFact(ctx context.Context, animal string) (Fact, error) {
-	var fact Fact
+	var err error
+	fact := Fact{Deleted: true}
+
+	for {
+		fid, err := s.getRandFactID(ctx, animal)
+		if err != nil {
+			return fact, err
+		}
+		fact, err = s.GetFact(ctx, fid)
+		if err != nil {
+			return fact, err
+		}
+		if !fact.Deleted {
+			break
+		}
+	}
+
+	return fact, err
+}
+
+func (s service) getRandFactID(ctx context.Context, animal string) (int64, error) {
 	result, err := s.rdb.ZRandMember(ctx, animal, 1, false).Result()
 	if err != nil {
-		return fact, err
+		return -1, err
 	}
 	factID, err := strconv.Atoi(result[0])
 	if err != nil {
-		return fact, err
+		return -1, err
 	}
-	fact, err = s.GetFact(ctx, int64(factID))
-	return fact, err
+	return int64(factID), nil
 }
