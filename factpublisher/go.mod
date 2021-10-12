@@ -1,4 +1,4 @@
-module github.com/snooyen/elephant-seal-facts/factpublisher
+module github.com/snooyen/animal-facts/factpublisher
 
 go 1.17
 
