@@ -167,6 +167,8 @@ func codeFrom(err error) int {
 	switch err {
 	case ErrNotFound:
 		return http.StatusNotFound
+	case ErrAnimalFactNotFound:
+		return http.StatusBadRequest
 	case ErrAlreadyExists:
 		return http.StatusBadRequest
 	default:

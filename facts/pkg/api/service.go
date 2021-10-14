@@ -31,6 +31,7 @@ type service struct {
 }
 
 var (
+	ErrAnimalFactNotFound = errors.New("Facts not found for this animal")
 	ErrNotFound      = errors.New("Fact not found")
 	ErrAlreadyExists = errors.New("Fact Already Exists")
 
@@ -150,6 +151,9 @@ func (s service) getRandFactID(ctx context.Context, animal string) (int64, error
 	result, err := s.rdb.ZRandMember(ctx, animal, 1, false).Result()
 	if err != nil {
 		return -1, err
+	}
+	if len(result) != 1 {
+		return -1, ErrAnimalFactNotFound
 	}
 	factID, err := strconv.Atoi(result[0])
 	if err != nil {
