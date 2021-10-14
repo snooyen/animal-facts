@@ -20,7 +20,7 @@ spec:
         command:
           - fact-publisher
           - --port=3001
-          - --redisHost=redis-headless
+          - --redisHost=redis-master
           - --redisPassword=$(REDIS_PASSWORD)
         ports:
         - containerPort: 3001

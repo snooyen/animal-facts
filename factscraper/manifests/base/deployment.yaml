@@ -20,7 +20,7 @@ spec:
         command:
           - fact-scraper
           - --port=3000
-          - --redisHost=redis-headless
+          - --redisHost=redis-master
           - --redisPassword=$(REDIS_PASSWORD)
         ports:
         - containerPort: 3000
