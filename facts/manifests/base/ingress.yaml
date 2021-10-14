@@ -12,6 +12,20 @@ spec:
     - host: seannguyen.dev
       http:
         paths:
+          - path: /facts
+            pathType: Prefix
+            backend:
+              service:
+                name:  facts-api
+                port:
+                  number: 3080
+          - path: /animals/
+            pathType: Exact
+            backend:
+              service:
+                name:  facts-api
+                port:
+                  number: 3080
           - path: /random
             pathType: Prefix
             backend:
