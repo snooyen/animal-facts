@@ -11,9 +11,9 @@ type PublishRequest struct {
 }
 
 type PublishResponse struct {
-	Fact  string  `json:"fact"`
-	Score float64 `json:"score"`
-	Err   string  `json:"err,omitempty"`
+	Fact string `json:"fact"`
+	ID   int64  `json:"id"`
+	Err  string `json:"err,omitempty"`
 }
 
 func DecodePublishRequest(ctx context.Context, r *http.Request) (interface{}, error) {
