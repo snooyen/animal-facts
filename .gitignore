@@ -15,3 +15,5 @@
 # vendor/
 _output/
 bin/
+*.code-workspace
+.DS_Store
