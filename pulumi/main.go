@@ -63,6 +63,21 @@ func main() {
 			}
 		}
 
+		// Create Twilio Auth Secret
+		twilioConfig := config.New(ctx, "twilio")
+		twilioAccountSID := string(twilioConfig.Require("accountsid"))
+		twilioToken := string(twilioConfig.Require("token"))
+		_, err = corev1.NewSecret(ctx, "twilio", &corev1.SecretArgs{
+			Type: pulumi.String("opaque"),
+			StringData: pulumi.StringMap{
+				"accountsid": pulumi.String(twilioAccountSID),
+				"token":      pulumi.String(twilioToken),
+			},
+		})
+		if err != nil {
+			return err
+		}
+
 		return nil
 	})
 }

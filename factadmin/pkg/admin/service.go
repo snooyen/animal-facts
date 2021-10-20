@@ -84,7 +84,7 @@ func (s service) Approve(ctx context.Context, animal string, fact string, action
 func (s service) ProcessApprovalRequests(ctx context.Context) (err error) {
 	animals, err := s.rdb.SMembers(ctx, "animals").Result()
 	if err != nil {
-		panic(err) // FIXME: Handle this error
+		return
 	}
 
 	for _, animal := range animals {

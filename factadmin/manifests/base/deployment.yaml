@@ -30,4 +30,13 @@ spec:
             secretKeyRef:
               name: redis
               key: redis-password
-
+        - name: TWILIO_ACCOUNT_SID
+          valueFrom:
+            secretKeyRef:
+              name: twilio
+              key: accountsid
+        - name: TWILIO_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: twilio
+              key: token
