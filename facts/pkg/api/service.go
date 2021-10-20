@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/go-redis/redis/v8"
 )
 
@@ -31,9 +31,9 @@ type service struct {
 }
 
 var (
-	ErrAnimalFactNotFound = errors.New("Facts not found for this animal")
-	ErrNotFound      = errors.New("Fact not found")
-	ErrAlreadyExists = errors.New("Fact Already Exists")
+	ErrAnimalFactNotFound = errors.New("facts not found for this animal")
+	ErrNotFound           = errors.New("fact not found")
+	ErrAlreadyExists      = errors.New("fact already exists")
 
 	animalsSetKey    = "animals"
 	masterFactSetKey = "facts"
@@ -85,11 +85,10 @@ func (s service) CreateFact(ctx context.Context, animal string, factText string)
 	}
 
 	// Add fact id to animal fact sorted set
-	key = fmt.Sprintf("%s", animal)
 	z := redis.Z{
 		Member: ufid,
 	}
-	err = s.rdb.ZAdd(ctx, key, &z).Err()
+	err = s.rdb.ZAdd(ctx, animal, &z).Err()
 	if err != nil {
 		return
 	}
@@ -117,7 +116,7 @@ func (s service) GetFact(ctx context.Context, ufid int64) (Fact, error) {
 // DeleteFact deletes a fact given its id
 func (s service) DeleteFact(ctx context.Context, ufid int64) error {
 
-	return errors.New("Not Implemented")
+	return errors.New("not implemented")
 }
 
 // GetAnimals returns a list of known animals

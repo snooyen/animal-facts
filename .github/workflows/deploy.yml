@@ -10,6 +10,7 @@ on:
         - "Build facts-api"
         - "Build fact-scraper"
         - "Build fact-publisher"
+        - "Build fact-admin"
       branches:
         - main
       types:
