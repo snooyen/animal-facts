@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-co-op/gocron"
@@ -63,10 +62,11 @@ func (s service) Publish(ctx context.Context, animal string) (response PublishRe
 		return
 	}
 	response.Fact = res.Fact
+	response.ID = res.Fact.ID
 
 	// Send fact for approval
 	approvalChan := fmt.Sprintf("approvals:%s", animal)
-	approvalMsg := fmt.Sprintf("%s:%s", strconv.FormatFloat(response.Score, 'f', -1, 64), response.Fact)
+	approvalMsg := fmt.Sprintf("%s:%s", res.Fact.ID, response.Fact)
 	err = s.rdb.Publish(ctx, approvalChan, approvalMsg).Err()
 
 	s.logger.Log("msg", "end", "method", "publish", "fact", response.Fact)

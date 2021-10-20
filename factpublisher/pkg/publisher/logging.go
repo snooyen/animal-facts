@@ -24,7 +24,7 @@ func (mw logmw) Publish(ctx context.Context, animal string) (response PublishRes
 			"method", "publish",
 			"animal", animal,
 			"fact", response.Fact,
-			"score", response.Score,
+			"id", response.ID,
 			"err", err,
 			"took", time.Since(begin),
 		)
