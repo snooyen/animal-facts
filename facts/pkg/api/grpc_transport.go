@@ -2,9 +2,11 @@ package api
 
 import (
 	"context"
-	"github.com/go-kit/kit/log"
+	"strconv"
+
 	"github.com/go-kit/kit/transport"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"github.com/go-kit/log"
 
 	"github.com/snooyen/animal-facts/facts/pb"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -144,7 +146,8 @@ func decodeGRPCGetRandAnimalFactRequest(_ context.Context, grpcReq interface{}) 
 
 func encodeGRPCGetRandAnimalFactResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(getRandAnimalFactResponse)
-	return &pb.GetRandAnimalFactReply{Fact: resp.Fact.Fact, Err: errToStr(resp.Err)}, nil
+	id := strconv.Itoa(int(resp.Fact.ID))
+	return &pb.GetRandAnimalFactReply{Fact: resp.Fact.Fact, ID: id, Err: errToStr(resp.Err)}, nil
 }
 
 func errToStr(err error) string {
