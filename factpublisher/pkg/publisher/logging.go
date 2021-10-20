@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 )
 
 func LoggingMiddleware(logger log.Logger) ServiceMiddleware {
@@ -24,7 +24,7 @@ func (mw logmw) Publish(ctx context.Context, animal string) (response PublishRes
 			"method", "publish",
 			"animal", animal,
 			"fact", response.Fact,
-			"score", response.Score,
+			"id", response.ID,
 			"err", err,
 			"took", time.Since(begin),
 		)

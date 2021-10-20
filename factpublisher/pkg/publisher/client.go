@@ -1,19 +1,20 @@
 package publisher
 
 import (
+	"context"
 	"fmt"
-	"google.golang.org/grpc"
 	"os"
 	"time"
 
-	//	"github.com/go-kit/kit/log"
-	//	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"google.golang.org/grpc"
 
 	pb "github.com/snooyen/animal-facts/facts/pb"
 )
 
-func NewFactsClient(grpcAddr string) pb.FactsClient {
-	conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure(), grpc.WithTimeout(time.Second))
+func NewFactsClient(ctx context.Context, grpcAddr string) pb.FactsClient {
+	ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+	defer cancel()
+	conn, err := grpc.DialContext(ctx, grpcAddr, grpc.WithInsecure())
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v", err)
 		os.Exit(1)

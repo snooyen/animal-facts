@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/go-co-op/gocron"
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/go-redis/redis/v8"
 
 	pb "github.com/snooyen/animal-facts/facts/pb"
@@ -16,7 +15,7 @@ import (
 )
 
 var (
-	ErrAnimalUnsupported = errors.New("Unsupported Animal")
+	ErrAnimalUnsupported = errors.New("unsupported animal")
 )
 
 // Service describes a service that publishs the web for animal-facts
@@ -38,7 +37,7 @@ func New(ctx context.Context, redisClient *redis.Client, logger log.Logger, fact
 	s := service{
 		rdb:       redisClient,
 		logger:    logger,
-		facts:     NewFactsClient(factsApiAddr),
+		facts:     NewFactsClient(ctx, factsApiAddr),
 		scheduler: gocron.NewScheduler(time.UTC),
 	}
 	if err := s.schedulePublishJobs(ctx, cronSchedule); err != nil {
@@ -63,10 +62,11 @@ func (s service) Publish(ctx context.Context, animal string) (response PublishRe
 		return
 	}
 	response.Fact = res.Fact
+	response.ID = res.ID
 
 	// Send fact for approval
 	approvalChan := fmt.Sprintf("approvals:%s", animal)
-	approvalMsg := fmt.Sprintf("%s:%s", strconv.FormatFloat(response.Score, 'f', -1, 64), response.Fact)
+	approvalMsg := fmt.Sprintf("%d:%s", response.ID, response.Fact)
 	err = s.rdb.Publish(ctx, approvalChan, approvalMsg).Err()
 
 	s.logger.Log("msg", "end", "method", "publish", "fact", response.Fact)
