@@ -60,7 +60,7 @@ func main() {
 
 	var (
 		service     = api.New(rdb, logger)
-		endpoints   = api.MakeServerEndpoints(service)
+		endpoints   = api.MakeServerEndpoints(service, logger)
 		httpHandler = api.NewHTTPHandler(endpoints, logger)
 		grpcServer  = api.NewGRPCServer(endpoints, logger)
 	)

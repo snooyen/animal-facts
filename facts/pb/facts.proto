@@ -16,7 +16,8 @@ message CreateFactRequest {
 }
 
 message CreateFactReply {
-    string Err = 1;
+    int64 ID = 1;
+    string Err = 2;
 }
 
 message GetFactRequest {

@@ -12,7 +12,7 @@ import (
 
 // animal-facts api service
 type Service interface {
-	CreateFact(ctx context.Context, animal string, fact string) error
+	CreateFact(ctx context.Context, animal string, fact string) (int64, error)
 	GetFact(ctx context.Context, ufid int64) (Fact, error)
 	DeleteFact(ctx context.Context, ufid int64) error
 	GetAnimals(ctx context.Context) ([]string, error)
@@ -27,12 +27,12 @@ type Fact struct {
 }
 
 type service struct {
-	rdb    *redis.Client
-	logger log.Logger
+	rdb *redis.Client
 }
 
 var (
-	ErrNotFound = errors.New("Fact not found")
+	ErrAnimalFactNotFound = errors.New("Facts not found for this animal")
+	ErrNotFound      = errors.New("Fact not found")
 	ErrAlreadyExists = errors.New("Fact Already Exists")
 
 	animalsSetKey    = "animals"
@@ -42,21 +42,23 @@ var (
 )
 
 func New(redisClient *redis.Client, logger log.Logger) Service {
-	logger.Log("msg", "created fact service")
-	return &service{
-		rdb:    redisClient,
-		logger: logger,
+	var s Service
+	{
+		s = service{rdb: redisClient}
+		s = ServiceLoggingMiddleware(logger)(s)
 	}
+
+	return s
 }
 
-func (s service) CreateFact(ctx context.Context, animal string, factText string) (err error) {
+func (s service) CreateFact(ctx context.Context, animal string, factText string) (ufid int64, err error) {
 	// Check if Fact Already Exists
 	factExists, err := s.rdb.SIsMember(ctx, masterFactSetKey, factText).Result()
 	if err != nil {
 		return
 	}
 	if factExists {
-		return ErrAlreadyExists
+		return -1, ErrAlreadyExists
 	}
 
 	// Add fact to master fact set
@@ -66,12 +68,12 @@ func (s service) CreateFact(ctx context.Context, animal string, factText string)
 	}
 
 	// Get next fact id
-	thisFID, err := s.rdb.Incr(ctx, nextFactIDKey).Result()
+	ufid, err = s.rdb.Incr(ctx, nextFactIDKey).Result()
 	if err != nil {
 		return
 	}
 	// Store fact in facts hash
-	key := fmt.Sprintf("%s%d", factHashPrefix, thisFID)
+	key := fmt.Sprintf("%s%d", factHashPrefix, ufid)
 	hashFields := map[string]interface{}{
 		"Animal":  animal,
 		"Fact":    factText,
@@ -85,7 +87,7 @@ func (s service) CreateFact(ctx context.Context, animal string, factText string)
 	// Add fact id to animal fact sorted set
 	key = fmt.Sprintf("%s", animal)
 	z := redis.Z{
-		Member: thisFID,
+		Member: ufid,
 	}
 	err = s.rdb.ZAdd(ctx, key, &z).Err()
 	if err != nil {
@@ -149,6 +151,9 @@ func (s service) getRandFactID(ctx context.Context, animal string) (int64, error
 	result, err := s.rdb.ZRandMember(ctx, animal, 1, false).Result()
 	if err != nil {
 		return -1, err
+	}
+	if len(result) != 1 {
+		return -1, ErrAnimalFactNotFound
 	}
 	factID, err := strconv.Atoi(result[0])
 	if err != nil {

@@ -19,7 +19,7 @@ spec:
         imagePullPolicy: Always
         command:
           - facts-api
-          - --redisHost=redis-headless
+          - --redisHost=redis-master
           - --redisPassword=$(REDIS_PASSWORD)
         ports:
         - containerPort: 3080

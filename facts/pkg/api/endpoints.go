@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log"
 )
 
 type Endpoints struct {
@@ -14,21 +15,29 @@ type Endpoints struct {
 	GetRandAnimalFactEndpoint endpoint.Endpoint
 }
 
-func MakeServerEndpoints(s Service) Endpoints {
-	return Endpoints{
+func MakeServerEndpoints(s Service, logger log.Logger) Endpoints {
+	endpoints := Endpoints{
 		CreateFactEndpoint:        MakeCreateFactEndpoint(s),
 		GetFactEndpoint:           MakeGetFactEndpoint(s),
 		DeleteFactEndpoint:        MakeDeleteFactEndpoint(s),
 		GetAnimalsEndpoint:        MakeGetAnimalsEndpoint(s),
 		GetRandAnimalFactEndpoint: MakeGetRandAnimalFactEndpoint(s),
 	}
+
+	endpoints.CreateFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "CreateFact"))(endpoints.CreateFactEndpoint)
+	endpoints.GetFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "GetFact"))(endpoints.GetFactEndpoint)
+	endpoints.DeleteFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "DeleteFact"))(endpoints.DeleteFactEndpoint)
+	endpoints.GetAnimalsEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "GetAnimals"))(endpoints.GetAnimalsEndpoint)
+	endpoints.GetRandAnimalFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "GetRandAnimalFact"))(endpoints.GetRandAnimalFactEndpoint)
+
+	return endpoints
 }
 
 func MakeCreateFactEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(createFactRequest)
-		e := s.CreateFact(ctx, req.Animal, req.Fact)
-		return createFactResponse{Err: e}, nil
+		ufid, e := s.CreateFact(ctx, req.Animal, req.Fact)
+		return createFactResponse{ID: ufid, Err: e}, nil
 	}
 }
 
@@ -69,6 +78,7 @@ type createFactRequest struct {
 }
 
 type createFactResponse struct {
+	ID  int64 `json:"id"`
 	Err error `json:"err,omitempty"`
 }
 
