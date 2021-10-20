@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/go-kit/kit/transport"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
@@ -146,8 +145,7 @@ func decodeGRPCGetRandAnimalFactRequest(_ context.Context, grpcReq interface{}) 
 
 func encodeGRPCGetRandAnimalFactResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(getRandAnimalFactResponse)
-	id := strconv.Itoa(int(resp.Fact.ID))
-	return &pb.GetRandAnimalFactReply{Fact: resp.Fact.Fact, ID: id, Err: errToStr(resp.Err)}, nil
+	return &pb.GetRandAnimalFactReply{Fact: resp.Fact.Fact, ID: resp.Fact.ID, Err: errToStr(resp.Err)}, nil
 }
 
 func errToStr(err error) string {
