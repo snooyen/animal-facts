@@ -27,7 +27,7 @@ var (
 	redisPassword = flag.String("redisPassword", "password123!", "Password to authenticate to redis")
 	redisDB       = flag.Int("redisDB", 0, "Redis DB id")
 	twilioNumber  = flag.String("twilioNumber", "(555) 555-5555", "Number from which to send sms messages")
-	adminNumber   = flag.String("twilioNumber", "(555) 555-5555", "Number to send admin sms messages")
+	adminNumber   = flag.String("adminNumber", "(555) 555-5555", "Number to send admin sms messages")
 )
 
 func main() {
