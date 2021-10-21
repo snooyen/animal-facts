@@ -69,6 +69,10 @@ func main() {
 		twilioToken := string(twilioConfig.Require("token"))
 		_, err = corev1.NewSecret(ctx, "twilio", &corev1.SecretArgs{
 			Type: pulumi.String("opaque"),
+			Metadata: &metav1.ObjectMetaArgs{
+				Name:      pulumi.String("twilio"),
+				Namespace: pulumi.String(namespace),
+			},
 			StringData: pulumi.StringMap{
 				"accountsid": pulumi.String(twilioAccountSID),
 				"token":      pulumi.String(twilioToken),
@@ -89,12 +93,14 @@ type RedisValues struct {
 }
 
 func DeployRedisChart(ctx *pulumi.Context, values RedisValues) error {
-	_, err := helm.NewChart(ctx, redisChart, helm.ChartArgs{
-		Chart:     pulumi.String(redisChart),
-		Namespace: pulumi.String(values.namespace),
-		FetchArgs: helm.FetchArgs{
+	_, err := helm.NewRelease(ctx, redisChart, &helm.ReleaseArgs{
+		Chart: pulumi.String(redisChart),
+		RepositoryOpts: helm.RepositoryOptsArgs{
 			Repo: pulumi.String(bitnamiHelmRepo),
 		},
+		Name:            pulumi.String(redisChart),
+		Namespace:       pulumi.String(values.namespace),
+		CreateNamespace: pulumi.Bool(true),
 		Values: pulumi.Map{
 			"auth": pulumi.Map{
 				"password": pulumi.String(values.password),
