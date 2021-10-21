@@ -49,6 +49,6 @@ message GetRandAnimalFactRequest {
 
 message GetRandAnimalFactReply {
     string Fact = 1;
-    string ID  = 2;
+    int64 ID  = 2;
     string Err = 3;
 }

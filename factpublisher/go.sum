@@ -84,8 +84,8 @@ github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:
 github.com/robfig/cron/v3 v3.0.1 h1:WdRxkvbJztn8LMz/QEvLN5sBU+xKpSqwwUO1Pjr4qDs=
 github.com/robfig/cron/v3 v3.0.1/go.mod h1:eQICP3HwyT7UooqI/z+Ov+PtYAWygg1TEWWzGIFLtro=
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
-github.com/snooyen/animal-facts/facts v0.0.0-20211012001113-d617a2fc69dd h1:GtjNcuzAErmaMgDam+ckGclDmt1Nn+agq1xfJdEPOec=
-github.com/snooyen/animal-facts/facts v0.0.0-20211012001113-d617a2fc69dd/go.mod h1:EjKqRWCBRNfbQjfZ7wf9Uh341gnDU2cXUbu0iWAqK40=
+github.com/snooyen/animal-facts/facts v0.0.0-20211020164544-14317752c85a h1:G7b68xoY2DYjxYeQkeP4K1EmFIPal8ylcUa/krkaFfM=
+github.com/snooyen/animal-facts/facts v0.0.0-20211020164544-14317752c85a/go.mod h1:EjKqRWCBRNfbQjfZ7wf9Uh341gnDU2cXUbu0iWAqK40=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
 github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
