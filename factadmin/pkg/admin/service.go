@@ -15,10 +15,14 @@ import (
 	openapi "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
+const (
+	hostname = "dev.seannguyen.dev"
+)
+
 var (
-	ErrInvalidFactFormat         = errors.New("Invalid Fact Format (should be <SCORE>:<FACT>)")
-	ErrAnimalUnsupported         = errors.New("Unsupported Animal")
-	ErrApprovalActionUnsupported = errors.New("Unsupported Action")
+	ErrInvalidFactFormat         = errors.New("invalid fact format (should be <SCORE>:<FACT>)")
+	ErrAnimalUnsupported         = errors.New("unsupported animal")
+	ErrApprovalActionUnsupported = errors.New("unsupported action")
 )
 
 // Service describes a service that publishs the web for animal-facts
@@ -65,7 +69,7 @@ func (s service) Approve(ctx context.Context, animal string, fact string, action
 	response.Fact = factText
 
 	factSetKey := fmt.Sprintf("facts:%s", animal)
-	disposalSetKey := fmt.Sprintf("disposal:s", animal)
+	disposalSetKey := fmt.Sprintf("disposal:%s", animal)
 	switch action {
 	case "DISPOSE": // Throw this fact away
 		s.rdb.SAdd(ctx, disposalSetKey, factText)
@@ -103,20 +107,34 @@ func (s service) subscribeApprovalChannel(ctx context.Context, animal string) {
 	sub := s.rdb.Subscribe(ctx, chanName)
 	approvalChannel := sub.Channel()
 
-	rateLimit := time.Tick(1 * time.Second)
+	rateLimit := time.NewTicker(1 * time.Second)
+	defer rateLimit.Stop()
 
 	s.logger.Log("msg", "start background", "subscription", chanName)
 	for msg := range approvalChannel {
-		<-rateLimit
+		<-rateLimit.C
 		s.logger.Log("msg", "tick", "subscription", chanName, "time", time.Now())
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			s.logger.Log("msg", "received message", "subscription", chanName, "text", fmt.Sprintf("%+v", msg))
-			msg := fmt.Sprintf("")
+			msgStr := msg.String()
+			s.logger.Log("msg", "received message", "subscription", chanName, "text", msgStr)
+			id := strings.Split(msgStr, ":")[0]
+			smsMsg := fmt.Sprintf(
+				"%s fact awaiting approval:\n"+
+					"%s/facts/%s\n"+
+					"approve: %s/admin/approve/%s\n"+
+					"defer: %s/admin/defer/%s\n"+
+					"delete: %s/admin/delete/%s\n",
+				animal,
+				hostname, id,
+				hostname, id,
+				hostname, id,
+				hostname, id,
+			)
 
-			resp, err := s.sendTextForApproval(fmt.Sprintf("%+v", msg))
+			resp, err := s.sendTextForApproval(smsMsg)
 			s.logger.Log("msg", "sent text for approval", "subscription", chanName, "response", resp, "err", err)
 
 		}
