@@ -67,6 +67,8 @@ func main() {
 		twilioConfig := config.New(ctx, "twilio")
 		twilioAccountSID := string(twilioConfig.Require("accountsid"))
 		twilioToken := string(twilioConfig.Require("token"))
+		twilioNumber := string(twilioConfig.Require("twilioNumber"))
+		adminNumber := string(twilioConfig.Require("adminNumber"))
 		_, err = corev1.NewSecret(ctx, "twilio", &corev1.SecretArgs{
 			Type: pulumi.String("opaque"),
 			Metadata: &metav1.ObjectMetaArgs{
@@ -74,8 +76,10 @@ func main() {
 				Namespace: pulumi.String(namespace),
 			},
 			StringData: pulumi.StringMap{
-				"accountsid": pulumi.String(twilioAccountSID),
-				"token":      pulumi.String(twilioToken),
+				"adminNumber":  pulumi.String(adminNumber),
+				"twilioNumber": pulumi.String(twilioNumber),
+				"accountsid":   pulumi.String(twilioAccountSID),
+				"token":        pulumi.String(twilioToken),
 			},
 		})
 		if err != nil {

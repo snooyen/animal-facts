@@ -12,5 +12,9 @@ config:
   redis:replicas: "1"
   twilio:accountsid:
     secure: AAABAC8RO7tXopKfhjeSkOwlc1QYtTNYs2FUJgsWTIE+UXRdxHlcSYp4sOfgf8KuAO2fmGuCDOhpF74hyb1bdD3T
+  twilio:adminNumber:
+    secure: AAABAMdRwccyLbg7XL1V7QZu/eOL2K0/f1ZJ/ZStfWOUcsVCY3jTULUcvkxyUg==
   twilio:token:
     secure: AAABABGkiChj8Netpusg2TXx2zNkJ6jtWOqUwD3w0YtGQCsF4B5kUc6mMgoe08/2vZZbJ/tl1VjCXTSobKk6DQ==
+  twilio:twilioNumber:
+    secure: AAABANq4c+PauH9EL8PgwJ1F4OLW+PDXGh72a6NdeDpkLRiehdo65KnU+zG+gw==
