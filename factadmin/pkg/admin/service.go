@@ -29,19 +29,23 @@ type Service interface {
 }
 
 type service struct {
-	rdb    *redis.Client
-	twilio *twilio.RestClient
-	logger log.Logger
+	rdb          *redis.Client
+	twilio       *twilio.RestClient
+	logger       log.Logger
+	twilioNumber string
+	adminNumber  string
 }
 
 // ServiceMiddleware is a chainable behavior modifier for Service.
 type ServiceMiddleware func(Service) Service
 
-func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.Logger) (s Service) {
+func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.Logger, twilioNumber, adminNumber string) (s Service) {
 	s = service{
-		rdb:    redisClient,
-		twilio: twilioClient,
-		logger: logger,
+		rdb:          redisClient,
+		twilio:       twilioClient,
+		logger:       logger,
+		twilioNumber: twilioNumber,
+		adminNumber:  adminNumber,
 	}
 
 	return
@@ -110,6 +114,8 @@ func (s service) subscribeApprovalChannel(ctx context.Context, animal string) {
 			return
 		default:
 			s.logger.Log("msg", "received message", "subscription", chanName, "text", fmt.Sprintf("%+v", msg))
+			msg := fmt.Sprintf("")
+
 			resp, err := s.sendTextForApproval(fmt.Sprintf("%+v", msg))
 			s.logger.Log("msg", "sent text for approval", "subscription", chanName, "response", resp, "err", err)
 
@@ -118,8 +124,8 @@ func (s service) subscribeApprovalChannel(ctx context.Context, animal string) {
 }
 
 func (s service) sendTextForApproval(msg string) (string, error) {
-	from := "(805) 500-0105"
-	to := "(626) 607-7393"
+	from := s.twilioNumber
+	to := s.adminNumber
 
 	params := &openapi.CreateMessageParams{}
 	params.SetTo(to)

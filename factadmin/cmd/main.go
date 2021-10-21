@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 	"github.com/go-redis/redis/v8"
 	flag "github.com/spf13/pflag"
 	"github.com/twilio/twilio-go"
@@ -26,6 +26,8 @@ var (
 	redisPort     = flag.String("redisPort", "6379", "Port with which to connect to redis")
 	redisPassword = flag.String("redisPassword", "password123!", "Password to authenticate to redis")
 	redisDB       = flag.Int("redisDB", 0, "Redis DB id")
+	twilioNumber  = flag.String("twilioNumber", "(555) 555-5555", "Number from which to send sms messages")
+	adminNumber   = flag.String("adminNumber", "(555) 555-5555", "Number to send admin sms messages")
 )
 
 func main() {
@@ -68,7 +70,7 @@ func main() {
 	}()
 
 	// Create admin Service
-	s := admin.New(rdb, twilioClient, logger)
+	s := admin.New(rdb, twilioClient, logger, *twilioNumber, *adminNumber)
 	s = admin.LoggingMiddleware(logger)(s)
 
 	httpServer := http.Server{
