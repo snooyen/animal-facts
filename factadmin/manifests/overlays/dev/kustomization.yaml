@@ -4,3 +4,8 @@ kind: Kustomization
 namespace: dev
 resources:
   - ../../base
+patches:
+- target:
+    kind: Ingress
+    name: facts-api
+  path: ingress-patch.json

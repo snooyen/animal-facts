@@ -28,6 +28,7 @@ type Service interface {
 	ApproveFact(ctx context.Context, ufid int64) error
 	DeferFact(ctx context.Context, ufid int64) error
 	DeleteFact(ctx context.Context, ufid int64) error
+	HandleSMS(ctx context.Context) error
 	ProcessApprovalRequests(ctx context.Context) (err error)
 }
 
@@ -49,6 +50,10 @@ func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.
 	}
 
 	return
+}
+
+func (s service) HandleSMS(ctx context.Context) error {
+	return nil
 }
 
 func (s service) ApproveFact(ctx context.Context, ufid int64) error {

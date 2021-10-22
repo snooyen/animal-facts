@@ -11,6 +11,7 @@ type Endpoints struct {
 	ApproveFactEndpoint endpoint.Endpoint
 	DeferFactEndpoint   endpoint.Endpoint
 	DeleteFactEndpoint  endpoint.Endpoint
+	HandleSMSEndpoint   endpoint.Endpoint
 }
 
 func MakeServerEndpoints(s Service, logger log.Logger) Endpoints {
@@ -18,11 +19,13 @@ func MakeServerEndpoints(s Service, logger log.Logger) Endpoints {
 		ApproveFactEndpoint: MakeApproveFactEndpoint(s),
 		DeferFactEndpoint:   MakeDeferFactEndpoint(s),
 		DeleteFactEndpoint:  MakeDeleteFactEndpoint(s),
+		HandleSMSEndpoint:   MakeHandleSMSEndpoint(s),
 	}
 
 	endpoints.ApproveFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "ApproveFact"))(endpoints.ApproveFactEndpoint)
 	endpoints.DeferFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "DeferFact"))(endpoints.DeferFactEndpoint)
 	endpoints.DeleteFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "DeleteFact"))(endpoints.DeleteFactEndpoint)
+	endpoints.HandleSMSEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "HandleSMS"))(endpoints.HandleSMSEndpoint)
 
 	return endpoints
 }
@@ -40,6 +43,12 @@ func MakeDeferFactEndpoint(s Service) endpoint.Endpoint {
 }
 
 func MakeDeleteFactEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return struct{}{}, nil
+	}
+}
+
+func MakeHandleSMSEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		return struct{}{}, nil
 	}
@@ -74,3 +83,13 @@ type deleteFactResponse struct {
 }
 
 func (r deleteFactResponse) error() error { return r.Err }
+
+type handleSMSRequest struct {
+	ID int64
+}
+
+type handleSMSResponse struct {
+	Err error `json:"err,omitempty"`
+}
+
+func (r handleSMSResponse) error() error { return r.Err }

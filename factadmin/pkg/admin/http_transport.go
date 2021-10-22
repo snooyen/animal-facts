@@ -30,6 +30,13 @@ func NewHTTPHandler(endpoints Endpoints, logger log.Logger) http.Handler {
 		POST /admin/defer/{id}		get list of known animals
 	*/
 
+	r.Methods("POST").Path("/admin/sms").Handler(httptransport.NewServer(
+		endpoints.HandleSMSEndpoint,
+		decodeHTTPHandleSMSRequest,
+		encodeResponse,
+		options...,
+	))
+
 	r.Methods("POST").Path("/admin/approve/{id}").Handler(httptransport.NewServer(
 		endpoints.ApproveFactEndpoint,
 		decodeHTTPApproveFactRequest,
@@ -60,6 +67,15 @@ func decodeHTTPApproveFactRequest(_ context.Context, r *http.Request) (request i
 
 func decodeHTTPDeferFactRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	return struct{}{}, nil
+}
+
+func decodeHTTPHandleSMSRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
+	req := http.Request{}
+	e := json.NewDecoder(r.Body).Decode(&req)
+	if e == nil {
+		return nil, e
+	}
+	return req, nil
 }
 
 func decodeHTTPDeleteFactRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
