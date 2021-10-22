@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -19,8 +20,10 @@ const (
 )
 
 var (
-	ErrAnimalUnsupported         = errors.New("unsupported animal")
-	ErrApprovalActionUnsupported = errors.New("unsupported action")
+	ErrAnimalUnsupported    = errors.New("unsupported animal")
+	ErrSMSTypeUnsupported   = errors.New("unsupported sms type")
+	ErrSMSActionUnsupported = errors.New("unsupported sms action")
+	smsRegExp               = regexp.MustCompile(`(?m)^(?P<type>FACT|USER):(?P<action>[[:alpha:]]*):(?P<data>.*)$`)
 )
 
 // Service describes a service that publishs the web for animal-facts
@@ -53,7 +56,24 @@ func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.
 }
 
 func (s service) HandleSMS(ctx context.Context, req handleSMSRequest) (string, error) {
-	return req.Body, nil
+
+	// Parse SMS Body for Action
+	match := smsRegExp.FindStringSubmatch(req.Body)
+	body := make(map[string]string)
+	for i, name := range smsRegExp.SubexpNames() {
+		if i != 0 && name != "" {
+			body[name] = match[i]
+		}
+	}
+
+	switch body["type"] {
+	case "FACT":
+		return fmt.Sprintf("GOT %s action on FACT # %s", body["action"], body["id"]), nil
+	case "USER":
+		return fmt.Sprintf("GOT %s action on USER # %s", body["action"], body["id"]), nil
+	default:
+		return "", ErrSMSTypeUnsupported
+	}
 }
 
 func (s service) ApproveFact(ctx context.Context, ufid int64) error {
