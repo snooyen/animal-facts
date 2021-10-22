@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"strconv"
 
@@ -70,12 +71,8 @@ func decodeHTTPDeferFactRequest(_ context.Context, r *http.Request) (request int
 }
 
 func decodeHTTPHandleSMSRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	req := handleSMSRequest{}
-	e := json.NewDecoder(r.Body).Decode(&req)
-	if e == nil {
-		return nil, e
-	}
-	return req, nil
+	body, err := ioutil.ReadAll(r.Body)
+	return handleSMSRequest{req: string(body)}, err
 }
 
 func decodeHTTPDeleteFactRequest(_ context.Context, r *http.Request) (request interface{}, err error) {

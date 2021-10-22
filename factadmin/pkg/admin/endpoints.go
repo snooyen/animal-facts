@@ -86,6 +86,7 @@ type deleteFactResponse struct {
 func (r deleteFactResponse) error() error { return r.Err }
 
 type handleSMSRequest struct {
+	req string
 }
 
 type handleSMSResponse struct {
