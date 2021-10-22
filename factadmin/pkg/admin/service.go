@@ -49,7 +49,7 @@ func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.
 		adminNumber:  adminNumber,
 	}
 
-	return
+	return ServiceLoggingMiddleware(logger)(s)
 }
 
 func (s service) HandleSMS(ctx context.Context) error {

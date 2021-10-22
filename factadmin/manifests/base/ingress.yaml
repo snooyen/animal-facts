@@ -12,7 +12,7 @@ spec:
     - host: seannguyen.dev
       http:
         paths:
-          - path: /admin/sms/
+          - path: /admin/sms
             pathType: Exact
             backend:
               service:
