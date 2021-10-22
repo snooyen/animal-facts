@@ -7,5 +7,5 @@ resources:
 patches:
 - target:
     kind: Ingress
-    name: facts-api
+    name: fact-admin
   path: ingress-patch.json

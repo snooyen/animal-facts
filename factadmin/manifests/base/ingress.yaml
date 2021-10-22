@@ -2,7 +2,7 @@
 kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: facts-api
+  name: fact-admin
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: 'true'

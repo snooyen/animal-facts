@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: fact-admin
-        image: ghcr.io/snooyen/animal-facts/fact-admin:main
+        image: ghcr.io/snooyen/animal-facts/fact-admin:sms
         imagePullPolicy: Always
         command:
           - fact-admin
