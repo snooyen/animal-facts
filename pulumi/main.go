@@ -1,12 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 
 	corev1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/core/v1"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/helm/v3"
 	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/kustomize"
 	metav1 "github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/meta/v1"
+	"github.com/pulumi/pulumi-kubernetes/sdk/v3/go/kubernetes/yaml"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
 )
@@ -57,7 +59,7 @@ func main() {
 		}
 
 		for _, service := range services {
-			err = DeployServiceOverlay(ctx, service)
+			err = DeployServiceOverlay(ctx, service, namespace)
 			if err != nil {
 				return err
 			}
@@ -85,6 +87,10 @@ func main() {
 		if err != nil {
 			return err
 		}
+
+		//		if err = CreateFactAdminAuthSecret(ctx, namespace); err != nil {
+		//			return err
+		//		}
 
 		return nil
 	})
@@ -121,12 +127,35 @@ func DeployRedisChart(ctx *pulumi.Context, values RedisValues) error {
 	return nil
 }
 
-func DeployServiceOverlay(ctx *pulumi.Context, service string) (err error) {
+func DeployServiceOverlay(ctx *pulumi.Context, service string, namespace string) (err error) {
 	config := config.New(ctx, service)
 	overlay := config.Require("overlay")
+	transformations := []yaml.Transformation{}
+	if service == "fact-admin" { // Configure fact-admin http auth middleware
+		twilioHTTPAuth := string(config.Require("twilio-auth"))
+		adminHTTPAuth := string(config.Require("admin-auth"))
+		users := fmt.Sprintf("%s\n%s", twilioHTTPAuth, adminHTTPAuth)
+		transformations = []yaml.Transformation{
+			// Write HTTP Auth Users to Secret
+			func(state map[string]interface{}, opts ...pulumi.ResourceOption) {
+				name := state["metadata"].(map[string]interface{})["name"]
+				if state["kind"] == "Secret" && name.(string) == "fact-admin-auth" {
+					state["stringData"].(map[string]interface{})["users"] = users
+				}
+			},
+			// Write MiddleWare annotation to Ingress
+			func(state map[string]interface{}, opts ...pulumi.ResourceOption) {
+				if state["kind"] == "Ingress" {
+					annotations := state["metadata"].(map[string]interface{})["annotations"]
+					annotations.(map[string]interface{})["traefik.ingress.kubernetes.io/router.middlewares"] = fmt.Sprintf("%s-fact-admin-auth@kubernetescrd", namespace)
+				}
+			},
+		}
+	}
 	_, err = kustomize.NewDirectory(ctx, service,
 		kustomize.DirectoryArgs{
-			Directory: pulumi.String(overlay),
+			Directory:       pulumi.String(overlay),
+			Transformations: transformations,
 		},
 	)
 	return
