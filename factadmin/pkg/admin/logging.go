@@ -56,12 +56,12 @@ func (mw serviceLoggingMiddleware) ProcessApprovalRequests(ctx context.Context) 
 	return mw.next.ProcessApprovalRequests(ctx)
 }
 
-func (mw serviceLoggingMiddleware) HandleSMS(ctx context.Context) (err error) {
+func (mw serviceLoggingMiddleware) HandleSMS(ctx context.Context, body string) (b string, err error) {
 	defer func() {
 		mw.logger.Log("method", "HandleSMS", "err", err)
 	}()
-
-	return mw.next.HandleSMS(ctx)
+	b, err = mw.next.HandleSMS(ctx, body)
+	return b, err
 }
 
 /* Endpoint Logging Middleware

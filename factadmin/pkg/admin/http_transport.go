@@ -72,7 +72,7 @@ func decodeHTTPDeferFactRequest(_ context.Context, r *http.Request) (request int
 
 func decodeHTTPHandleSMSRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	body, err := ioutil.ReadAll(r.Body)
-	return handleSMSRequest{req: string(body)}, err
+	return handleSMSRequest{body: string(body)}, err
 }
 
 func decodeHTTPDeleteFactRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
