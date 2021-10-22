@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/schema"
@@ -41,36 +40,7 @@ func NewHTTPHandler(endpoints Endpoints, logger log.Logger) http.Handler {
 		options...,
 	))
 
-	r.Methods("POST").Path("/admin/approve/{id}").Handler(httptransport.NewServer(
-		endpoints.ApproveFactEndpoint,
-		decodeHTTPApproveFactRequest,
-		encodeResponse,
-		options...,
-	))
-
-	r.Methods("POST").Path("/admin/delete/{id}").Handler(httptransport.NewServer(
-		endpoints.DeleteFactEndpoint,
-		decodeHTTPDeleteFactRequest,
-		encodeResponse,
-		options...,
-	))
-
-	r.Methods("POST").Path("/admin/defer/{id}").Handler(httptransport.NewServer(
-		endpoints.DeferFactEndpoint,
-		decodeHTTPDeferFactRequest,
-		encodeResponse,
-		options...,
-	))
-
 	return r
-}
-
-func decodeHTTPApproveFactRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	return struct{}{}, nil
-}
-
-func decodeHTTPDeferFactRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	return struct{}{}, nil
 }
 
 func decodeHTTPHandleSMSRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
@@ -85,34 +55,6 @@ func decodeHTTPHandleSMSRequest(_ context.Context, r *http.Request) (request int
 		return nil, err
 	}
 	return req, nil
-}
-
-func decodeHTTPDeleteFactRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	id, err := decodeRequestID(r)
-	if err != nil {
-		return nil, err
-	}
-
-	req := deleteFactRequest{ID: id}
-	e := json.NewDecoder(r.Body).Decode(&request)
-	if e == nil {
-		return nil, e
-	}
-	return req, nil
-}
-
-func decodeRequestID(r *http.Request) (int64, error) {
-	vars := mux.Vars(r)
-	idVar, ok := vars["id"]
-	if !ok {
-		return -1, ErrBadRouting
-	}
-
-	id, err := strconv.Atoi(idVar)
-	if err != nil {
-		return -1, ErrBadFactID
-	}
-	return int64(id), nil
 }
 
 func encodeResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {

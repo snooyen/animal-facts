@@ -28,9 +28,6 @@ var (
 
 // Service describes a service that publishs the web for animal-facts
 type Service interface {
-	ApproveFact(ctx context.Context, ufid int64) error
-	DeferFact(ctx context.Context, ufid int64) error
-	DeleteFact(ctx context.Context, ufid int64) error
 	HandleSMS(ctx context.Context, req handleSMSRequest) (string, error)
 	ProcessApprovalRequests(ctx context.Context) (err error)
 }
@@ -68,24 +65,29 @@ func (s service) HandleSMS(ctx context.Context, req handleSMSRequest) (string, e
 
 	switch body["type"] {
 	case "FACT":
-		return fmt.Sprintf("GOT %s action on FACT # %s", body["action"], body["id"]), nil
+		return s.handleSMSFact(ctx, body["action"], body["data"])
 	case "USER":
-		return fmt.Sprintf("GOT %s action on USER # %s", body["action"], body["id"]), nil
+		return s.handleSMSUser(ctx, body["action"], body["data"])
 	default:
 		return "", ErrSMSTypeUnsupported
 	}
 }
 
-func (s service) ApproveFact(ctx context.Context, ufid int64) error {
-	return nil
+func (s service) handleSMSFact(ctx context.Context, action string, data string) (string, error) {
+	switch action {
+	case "APPROVE":
+		return "", fmt.Errorf("not implemented")
+	case "DEFER":
+		return "", fmt.Errorf("not implemented")
+	case "DELETE":
+		return "", fmt.Errorf("not implemented")
+	default:
+		return "", ErrSMSActionUnsupported
+	}
 }
 
-func (s service) DeferFact(ctx context.Context, ufid int64) error {
-	return nil
-}
-
-func (s service) DeleteFact(ctx context.Context, ufid int64) error {
-	return nil
+func (s service) handleSMSUser(ctx context.Context, action string, data string) (string, error) {
+	return fmt.Sprintf("GOT %s action on USER with data: %s", action, data), nil
 }
 
 func (s service) ProcessApprovalRequests(ctx context.Context) (err error) {
