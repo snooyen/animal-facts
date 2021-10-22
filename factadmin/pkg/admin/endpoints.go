@@ -2,7 +2,6 @@ package admin
 
 import (
 	"context"
-	"net/http"
 
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/log"
@@ -51,11 +50,8 @@ func MakeDeleteFactEndpoint(s Service) endpoint.Endpoint {
 
 func MakeHandleSMSEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		res := http.Response{
-			Status:     "200 OK",
-			StatusCode: 200,
-		}
-		return res, nil
+		e := s.HandleSMS(ctx)
+		return handleSMSResponse{Err: e}, nil
 	}
 }
 
@@ -90,7 +86,6 @@ type deleteFactResponse struct {
 func (r deleteFactResponse) error() error { return r.Err }
 
 type handleSMSRequest struct {
-	ID int64
 }
 
 type handleSMSResponse struct {

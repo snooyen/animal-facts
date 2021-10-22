@@ -70,7 +70,7 @@ func decodeHTTPDeferFactRequest(_ context.Context, r *http.Request) (request int
 }
 
 func decodeHTTPHandleSMSRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
-	req := http.Request{}
+	req := handleSMSRequest{}
 	e := json.NewDecoder(r.Body).Decode(&req)
 	if e == nil {
 		return nil, e
