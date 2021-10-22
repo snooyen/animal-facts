@@ -20,7 +20,7 @@ import (
 var (
 	// commandline flags
 	versionInfo   = flag.Bool("version", false, "prints the version information")
-	host          = flag.String("host", "localhost", "service hostname")
+	host          = flag.String("host", "", "service hostname")
 	port          = flag.String("port", "3002", "Port to service requests on")
 	redisHost     = flag.String("redisHost", "localhost", "Hostname/address of redis")
 	redisPort     = flag.String("redisPort", "6379", "Port with which to connect to redis")
