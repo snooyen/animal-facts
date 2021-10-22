@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -16,20 +15,20 @@ import (
 )
 
 const (
-	hostname = "dev.seannguyen.dev"
+	hostname = "https://dev.seannguyen.dev"
 )
 
 var (
-	ErrInvalidFactFormat         = errors.New("invalid fact format (should be <SCORE>:<FACT>)")
 	ErrAnimalUnsupported         = errors.New("unsupported animal")
 	ErrApprovalActionUnsupported = errors.New("unsupported action")
 )
 
 // Service describes a service that publishs the web for animal-facts
 type Service interface {
-	Approve(ctx context.Context, animal string, fact string, action string) (ApprovalResponse, error)
+	ApproveFact(ctx context.Context, ufid int64) error
+	DeferFact(ctx context.Context, ufid int64) error
+	DeleteFact(ctx context.Context, ufid int64) error
 	ProcessApprovalRequests(ctx context.Context) (err error)
-	subscribeApprovalChannel(ctx context.Context, animal string)
 }
 
 type service struct {
@@ -39,9 +38,6 @@ type service struct {
 	twilioNumber string
 	adminNumber  string
 }
-
-// ServiceMiddleware is a chainable behavior modifier for Service.
-type ServiceMiddleware func(Service) Service
 
 func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.Logger, twilioNumber, adminNumber string) (s Service) {
 	s = service{
@@ -55,38 +51,16 @@ func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.
 	return
 }
 
-func (s service) Approve(ctx context.Context, animal string, fact string, action string) (response ApprovalResponse, err error) {
-	response = ApprovalResponse{Animal: animal, Action: action}
+func (s service) ApproveFact(ctx context.Context, ufid int64) error {
+	return nil
+}
 
-	// Get the Fact Score and Fact Text
-	fArray := strings.SplitN(fact, ":", 2)
-	if len(fArray) != 2 {
-		err = ErrInvalidFactFormat
-		return
-	}
-	factScore := fArray[0]
-	factText := fArray[1]
-	response.Fact = factText
+func (s service) DeferFact(ctx context.Context, ufid int64) error {
+	return nil
+}
 
-	factSetKey := fmt.Sprintf("facts:%s", animal)
-	disposalSetKey := fmt.Sprintf("disposal:%s", animal)
-	switch action {
-	case "DISPOSE": // Throw this fact away
-		s.rdb.SAdd(ctx, disposalSetKey, factText)
-		response.Msg = fmt.Sprintf("%s fact disposed", animal)
-	case "DEFER": // Add this fact back into the fact set
-		score, _ := strconv.Atoi(factScore)
-		s.rdb.ZAdd(ctx, factSetKey, &redis.Z{float64(score + 1), factText})
-		response.Msg = fmt.Sprintf("%s fact defered", animal)
-	case "PUBLISH": // Publish this fact
-		subChan := fmt.Sprintf("sub:%s", animal)
-		err = s.rdb.Publish(ctx, subChan, factText).Err()
-		response.Msg = fmt.Sprintf("%s fact published", animal)
-	default:
-		err = ErrApprovalActionUnsupported
-	}
-
-	return
+func (s service) DeleteFact(ctx context.Context, ufid int64) error {
+	return nil
 }
 
 func (s service) ProcessApprovalRequests(ctx context.Context) (err error) {
@@ -120,7 +94,7 @@ func (s service) subscribeApprovalChannel(ctx context.Context, animal string) {
 		default:
 			msgStr := msg.String()
 			s.logger.Log("msg", "received message", "subscription", chanName, "text", msgStr)
-			id := strings.Split(msgStr, ":")[0]
+			id := strings.TrimSpace(strings.SplitN(msgStr, ":", 4)[2])
 			smsMsg := fmt.Sprintf(
 				"%s fact awaiting approval:\n"+
 					"%s/facts/%s\n"+

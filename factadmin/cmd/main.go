@@ -35,9 +35,13 @@ func main() {
 	flag.Parse()
 	listen := fmt.Sprintf("%s:%s", *host, *port)
 
+	// Create logger to pass to components
 	var logger log.Logger
-	logger = log.NewLogfmtLogger(os.Stderr)
-	logger = log.With(logger, "listen", listen, "caller", log.DefaultCaller)
+	{
+		logger = log.NewLogfmtLogger(os.Stderr)
+		logger = log.With(logger, "ts", log.DefaultTimestampUTC)
+		logger = log.With(logger, "caller", log.DefaultCaller)
+	}
 
 	// --version: print version info
 	var err error
@@ -61,6 +65,23 @@ func main() {
 	twilioClient := twilio.NewRestClient()
 
 	ctx, cancel := context.WithCancel(context.Background())
+
+	// Create admin Service
+	var (
+		service    = admin.New(rdb, twilioClient, logger, *twilioNumber, *adminNumber)
+		endpoints  = admin.MakeServerEndpoints(service, logger)
+		httpServer = http.Server{
+			Addr:    listen,
+			Handler: admin.NewHTTPHandler(endpoints, logger),
+		}
+	)
+
+	err = service.ProcessApprovalRequests(ctx) // Background process handles redis pubsub messages
+	if err != nil {
+		logger.Log("err", fmt.Sprintf("failed to start background processes, err: %+v", err))
+		os.Exit(1)
+	}
+
 	// signalChan will catch SIGINT and SIGTERM and allow the parser to cleanup before exiting the program
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
@@ -68,22 +89,6 @@ func main() {
 		signal.Stop(signalChan)
 		cancel()
 	}()
-
-	// Create admin Service
-	s := admin.New(rdb, twilioClient, logger, *twilioNumber, *adminNumber)
-	s = admin.LoggingMiddleware(logger)(s)
-
-	httpServer := http.Server{
-		Addr:    listen,
-		Handler: admin.NewHTTPHandler(s),
-	}
-
-	err = s.ProcessApprovalRequests(ctx) // Background process handles redis pubsub messages
-	if err != nil {
-		logger.Log("err", fmt.Sprintf("failed to start background processes, err: %+v", err))
-		os.Exit(1)
-	}
-
 	// Background goroutine waits for ctx to be canceled or SIGINT/SIGTERM to be caught
 	go func() {
 		select {

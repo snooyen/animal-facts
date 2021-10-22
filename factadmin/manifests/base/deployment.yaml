@@ -22,6 +22,8 @@ spec:
           - --port=3002
           - --redisHost=redis-headless
           - --redisPassword=$(REDIS_PASSWORD)
+          - --twilioNumber=$(TWILIO_PHONE_NUMBER)
+          - --adminNumber=$(ADMIN_PHONE_NUMBER)
         ports:
         - containerPort: 3002
         env:
