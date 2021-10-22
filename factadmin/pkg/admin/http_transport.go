@@ -8,15 +8,19 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/schema"
 
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/go-kit/log"
 )
 
 var (
+	// Set a Decoder instance as a package global, because it caches
+	// meta-data about structs, and an instance can be shared safely.
+	schemaDecoder = schema.NewDecoder()
+	ErrBadFactID  = errors.New("could not parse fact id to int")
 	// ErrBadRouting is returned when an expected path variable is missing.
 	// It always indicates programmer error.
-	ErrBadFactID  = errors.New("could not parse fact id to int")
 	ErrBadRouting = errors.New("inconsistent mapping between route and handler (programmer error)")
 )
 
@@ -70,10 +74,15 @@ func decodeHTTPDeferFactRequest(_ context.Context, r *http.Request) (request int
 }
 
 func decodeHTTPHandleSMSRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
+	err = r.ParseForm()
+	if err != nil {
+		return nil, err
+	}
+
 	req := handleSMSRequest{}
-	e := json.NewDecoder(r.Body).Decode(&req)
-	if e != nil {
-		return nil, e
+	err = schemaDecoder.Decode(&req, r.PostForm)
+	if err != nil {
+		return nil, err
 	}
 	return req, nil
 }
