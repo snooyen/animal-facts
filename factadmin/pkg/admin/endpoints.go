@@ -51,7 +51,7 @@ func MakeDeleteFactEndpoint(s Service) endpoint.Endpoint {
 func MakeHandleSMSEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(handleSMSRequest)
-		_, e := s.HandleSMS(ctx, req.body)
+		_, e := s.HandleSMS(ctx, req)
 		return handleSMSResponse{Err: e}, nil
 	}
 }
@@ -87,7 +87,25 @@ type deleteFactResponse struct {
 func (r deleteFactResponse) error() error { return r.Err }
 
 type handleSMSRequest struct {
-	body string
+	ToCountry     string
+	ToState       string
+	SmsMessageSid string
+	NumMedia      string
+	ToCity        string
+	FromZip       string
+	SmsSid        string
+	FromState     string
+	SmsStatus     string
+	FromCity      string
+	Body          string
+	FromCountry   string
+	To            string
+	ToZip         string
+	NumSegments   string
+	MessageSid    string
+	AccountSid    string
+	From          string
+	ApiVersion    string
 }
 
 type handleSMSResponse struct {
