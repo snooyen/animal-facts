@@ -115,8 +115,25 @@ func (s service) GetFact(ctx context.Context, ufid int64) (Fact, error) {
 
 // DeleteFact deletes a fact given its id
 func (s service) DeleteFact(ctx context.Context, ufid int64) error {
+	fact, err := s.GetFact(ctx, ufid)
+	if err != nil {
+		return err
+	}
 
-	return errors.New("not implemented")
+	key := fmt.Sprintf("%s%d", factHashPrefix, fact.ID)
+	// Update Fact.Deleted
+	err = s.rdb.HSet(ctx, key, "Deleted", 1).Err()
+	if err != nil {
+		return err
+	}
+
+	// Remove the fact from the animal's fact set
+	err = s.rdb.ZRem(ctx, fact.Animal, fact.ID).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetAnimals returns a list of known animals
