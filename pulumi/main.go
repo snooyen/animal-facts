@@ -88,10 +88,6 @@ func main() {
 			return err
 		}
 
-		//		if err = CreateFactAdminAuthSecret(ctx, namespace); err != nil {
-		//			return err
-		//		}
-
 		return nil
 	})
 }
