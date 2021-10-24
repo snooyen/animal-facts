@@ -6,11 +6,13 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-kit/log"
 	"github.com/go-redis/redis/v8"
+	"github.com/snooyen/animal-facts/facts/pb"
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/api/v2010"
 )
@@ -23,6 +25,7 @@ var (
 	ErrAnimalUnsupported    = errors.New("unsupported animal")
 	ErrSMSTypeUnsupported   = errors.New("unsupported sms type")
 	ErrSMSActionUnsupported = errors.New("unsupported sms action")
+	ErrSMSBadFactData       = errors.New("could not convert FACT data to int")
 	smsRegExp               = regexp.MustCompile(`(?m)^(?P<type>FACT|USER):(?P<action>[[:alpha:]]*):(?P<data>.*)$`)
 )
 
@@ -33,6 +36,7 @@ type Service interface {
 }
 
 type service struct {
+	facts        pb.FactsClient
 	rdb          *redis.Client
 	twilio       *twilio.RestClient
 	logger       log.Logger
@@ -40,8 +44,9 @@ type service struct {
 	adminNumber  string
 }
 
-func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.Logger, twilioNumber, adminNumber string) (s Service) {
+func New(factsClient pb.FactsClient, redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.Logger, twilioNumber, adminNumber string) (s Service) {
 	s = service{
+		facts:        factsClient,
 		rdb:          redisClient,
 		twilio:       twilioClient,
 		logger:       logger,
@@ -80,7 +85,15 @@ func (s service) handleSMSFact(ctx context.Context, action string, data string) 
 	case "DEFER":
 		return "", fmt.Errorf("not implemented")
 	case "DELETE":
-		return "", fmt.Errorf("not implemented")
+		ufid, err := strconv.Atoi(data)
+		if err == nil {
+			return "", ErrSMSBadFactData
+		}
+		r, err := s.facts.DeleteFact(ctx, &pb.DeleteFactRequest{ID: int64(ufid)})
+		if err != nil {
+			return "", err
+		}
+		return r.Err, err
 	default:
 		return "", ErrSMSActionUnsupported
 	}

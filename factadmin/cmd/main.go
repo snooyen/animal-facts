@@ -68,9 +68,10 @@ func main() {
 
 	// Create admin Service
 	var (
-		service    = admin.New(rdb, twilioClient, logger, *twilioNumber, *adminNumber)
-		endpoints  = admin.MakeServerEndpoints(service, logger)
-		httpServer = http.Server{
+		factsClient = admin.NewFactsClient(ctx, "facts-api:3081")
+		service     = admin.New(factsClient, rdb, twilioClient, logger, *twilioNumber, *adminNumber)
+		endpoints   = admin.MakeServerEndpoints(service, logger)
+		httpServer  = http.Server{
 			Addr:    listen,
 			Handler: admin.NewHTTPHandler(endpoints, logger),
 		}
