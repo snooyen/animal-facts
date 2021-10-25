@@ -11,7 +11,7 @@ import (
 	flag "github.com/spf13/pflag"
 	"google.golang.org/grpc"
 
-	"github.com/go-kit/kit/log"
+	"github.com/go-kit/log"
 
 	"github.com/snooyen/animal-facts/factpublisher/pb"
 	"github.com/snooyen/animal-facts/factpublisher/pkg/publisher"
@@ -20,15 +20,15 @@ import (
 
 var (
 	// commandline flags
-	versionInfo    = flag.Bool("version", false, "prints the version information")
-	factsApiAddr   = flag.String("factsApiAddr", "facts-api:3081", "Address of facts-api grpc server")
 	cronSchedule   = flag.String("schedule", "15 9 * * *", "cron schedule for publish jobs")
-	httpListenPort = flag.String("httpPort", "3080", "Port to service HTTP requests on")
+	factsApiAddr   = flag.String("factsApiAddr", "facts-api:3081", "Address of facts-api grpc server")
 	grpcListenPort = flag.String("grpcPort", "3081", "Port to service GRPC requests on")
-	redisHost      = flag.String("redisHost", "localhost", "Hostname/address of redis")
-	redisPort      = flag.String("redisPort", "6379", "Port with which to connect to redis")
-	redisPassword  = flag.String("redisPassword", "password123!", "Password to authenticate to redis")
+	httpListenPort = flag.String("httpPort", "3080", "Port to service HTTP requests on")
 	redisDB        = flag.Int("redisDB", 0, "Redis DB id")
+	redisHost      = flag.String("redisHost", "localhost", "Hostname/address of redis")
+	redisPassword  = flag.String("redisPassword", "password123!", "Password to authenticate to redis")
+	redisPort      = flag.String("redisPort", "6379", "Port with which to connect to redis")
+	versionInfo    = flag.Bool("version", false, "prints the version information")
 )
 
 func main() {
@@ -68,9 +68,11 @@ func main() {
 		os.Exit(1)
 	}
 	service = publisher.ServiceLoggingMiddleware(logger)(service)
-	endpoints := publisher.MakeServerEndpoints(service, logger)
-	httpHandler := publisher.NewHTTPHandler(endpoints, logger)
-	grpcServer := publisher.NewGRPCServer(endpoints, logger)
+	var (
+		endpoints   = publisher.MakeServerEndpoints(service, logger)
+		httpHandler = publisher.NewHTTPHandler(endpoints, logger)
+		grpcServer  = publisher.NewGRPCServer(endpoints, logger)
+	)
 
 	grpcErr := make(chan error)
 	httpErr := make(chan error)

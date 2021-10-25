@@ -23,7 +23,10 @@ func MakeServerEndpoints(s Service, logger log.Logger) Endpoints {
 
 func MakePublishFactEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return struct{}{}, nil
+		req := request.(publishFactRequest)
+		rsp, e := s.PublishFact(ctx, req.Animal)
+		rsp.Err = e
+		return rsp, nil
 	}
 }
 
