@@ -2,34 +2,50 @@ package publisher
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/log"
 )
 
-func LoggingMiddleware(logger log.Logger) ServiceMiddleware {
+// ServiceMiddleware is a chainable behavior modifier for Service.
+type ServiceMiddleware func(Service) Service
+
+// ServiceLoggingMiddleware takes a logger as a dependency
+// and returns a service Middleware.
+func ServiceLoggingMiddleware(logger log.Logger) ServiceMiddleware {
 	return func(next Service) Service {
-		return logmw{logger, next}
+		return serviceLoggingMiddleware{logger, next}
 	}
 }
 
-type logmw struct {
+type serviceLoggingMiddleware struct {
 	logger log.Logger
-	Service
+	next   Service
 }
 
-func (mw logmw) Publish(ctx context.Context, animal string) (response PublishResponse, err error) {
-	defer func(begin time.Time) {
-		_ = mw.logger.Log(
-			"method", "publish",
-			"animal", animal,
-			"fact", response.Fact,
-			"id", response.ID,
-			"err", err,
-			"took", time.Since(begin),
-		)
-	}(time.Now())
+func (mw serviceLoggingMiddleware) PublishFact(ctx context.Context, animal string) (response publishFactResponse, err error) {
+	defer func() {
+		mw.logger.Log("method", "PublishFact", "resp", fmt.Sprintf("%+v", response), "err", err)
+	}()
 
-	response, err = mw.Service.Publish(ctx, animal)
-	return
+	return mw.next.PublishFact(ctx, animal)
+}
+
+/* Endpoint Logging Middleware
+Returns an endpoint middleware that logs the
+duration of each invocation, and the resulting error, if any.
+*/
+func EndpointLoggingMiddleware(logger log.Logger) endpoint.Middleware {
+	return func(next endpoint.Endpoint) endpoint.Endpoint {
+		return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+
+			defer func(begin time.Time) {
+				logger.Log("transport_error", err, "took", time.Since(begin))
+			}(time.Now())
+			return next(ctx, request)
+
+		}
+	}
 }

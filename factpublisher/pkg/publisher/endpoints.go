@@ -2,16 +2,39 @@ package publisher
 
 import (
 	"context"
+
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/log"
 )
 
-func MakePublishEndpoint(s Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(PublishRequest)
-		v, err := s.Publish(ctx, req.Animal)
-		if err != nil {
-			v.Err = err.Error()
-		}
-		return v, nil
+type Endpoints struct {
+	PublishFactEndpoint endpoint.Endpoint
+}
+
+func MakeServerEndpoints(s Service, logger log.Logger) Endpoints {
+	endpoints := Endpoints{
+		PublishFactEndpoint: MakePublishFactEndpoint(s),
+	}
+
+	endpoints.PublishFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "PublishFact"))(endpoints.PublishFactEndpoint)
+
+	return endpoints
+}
+
+func MakePublishFactEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		return struct{}{}, nil
 	}
 }
+
+type publishFactRequest struct {
+	Animal string
+}
+
+type publishFactResponse struct {
+	Fact string `json:"fact"`
+	ID   int64  `json:"id"`
+	Err  error  `json:"err,omitempty"`
+}
+
+func (r publishFactResponse) error() error { return r.Err }

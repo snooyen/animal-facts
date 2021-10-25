@@ -20,7 +20,7 @@ var (
 
 // Service describes a service that publishs the web for animal-facts
 type Service interface {
-	Publish(ctx context.Context, animal string) (PublishResponse, error)
+	PublishFact(ctx context.Context, animal string) (publishFactResponse, error)
 }
 
 type service struct {
@@ -29,9 +29,6 @@ type service struct {
 	facts     pb.FactsClient
 	scheduler *gocron.Scheduler
 }
-
-// ServiceMiddleware is a chainable behavior modifier for Service.
-type ServiceMiddleware func(Service) Service
 
 func New(ctx context.Context, redisClient *redis.Client, logger log.Logger, factsApiAddr string, cronSchedule string) (Service, error) {
 	s := service{
@@ -49,9 +46,9 @@ func New(ctx context.Context, redisClient *redis.Client, logger log.Logger, fact
 	return s, nil
 }
 
-func (s service) Publish(ctx context.Context, animal string) (response PublishResponse, err error) {
+func (s service) PublishFact(ctx context.Context, animal string) (response publishFactResponse, err error) {
 	s.logger.Log("msg", "start", "method", "publish", "animal", animal)
-	response = PublishResponse{}
+	response = publishFactResponse{}
 
 	req := pb.GetRandAnimalFactRequest{
 		Animal: animal,
@@ -86,7 +83,7 @@ func (s service) schedulePublishJobs(ctx context.Context, cronSchedule string) e
 
 	for _, animal := range res.Animals {
 		s.logger.Log("method", "scheduler", "animal", animal, "cronSchedule", cronSchedule)
-		s.scheduler.Cron(cronSchedule).Tag(animal).Do(s.Publish, ctx, animal)
+		s.scheduler.Cron(cronSchedule).Tag(animal).Do(s.PublishFact, ctx, animal)
 	}
 
 	return nil
