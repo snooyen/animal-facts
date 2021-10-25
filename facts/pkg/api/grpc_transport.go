@@ -17,6 +17,7 @@ type grpcServer struct {
 	getFact           grpctransport.Handler
 	getAnimals        grpctransport.Handler
 	getRandAnimalFact grpctransport.Handler
+	publishFact       grpctransport.Handler
 	pb.UnimplementedFactsServer
 }
 
@@ -54,6 +55,12 @@ func NewGRPCServer(endpoints Endpoints, logger log.Logger) pb.FactsServer {
 			endpoints.DeleteFactEndpoint,
 			decodeGRPCDeleteFactRequest,
 			encodeGRPCDeleteFactResponse,
+			options...,
+		),
+		publishFact: grpctransport.NewServer(
+			endpoints.PublishFactEndpoint,
+			decodeGRPCPublishFactRequest,
+			encodeGRPCPublishFactResponse,
 			options...,
 		),
 	}
@@ -97,6 +104,14 @@ func (s *grpcServer) GetRandAnimalFact(ctx context.Context, req *pb.GetRandAnima
 		return nil, err
 	}
 	return rep.(*pb.GetRandAnimalFactReply), nil
+}
+
+func (s *grpcServer) PublishFact(ctx context.Context, req *pb.PublishFactRequest) (*pb.PublishFactReply, error) {
+	_, rep, err := s.publishFact.ServeGRPC(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return rep.(*pb.PublishFactReply), nil
 }
 
 func decodeGRPCCreateFactRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
@@ -146,6 +161,16 @@ func decodeGRPCGetRandAnimalFactRequest(_ context.Context, grpcReq interface{}) 
 func encodeGRPCGetRandAnimalFactResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(getRandAnimalFactResponse)
 	return &pb.GetRandAnimalFactReply{Fact: resp.Fact.Fact, ID: resp.Fact.ID, Err: errToStr(resp.Err)}, nil
+}
+
+func decodeGRPCPublishFactRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	req := grpcReq.(*pb.PublishFactRequest)
+	return publishFactRequest{Animal: req.Animal}, nil
+}
+
+func encodeGRPCPublishFactResponse(_ context.Context, response interface{}) (interface{}, error) {
+	resp := response.(publishFactResponse)
+	return &pb.PublishFactReply{Err: errToStr(resp.Err)}, nil
 }
 
 func errToStr(err error) string {

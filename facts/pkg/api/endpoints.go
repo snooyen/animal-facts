@@ -13,6 +13,7 @@ type Endpoints struct {
 	DeleteFactEndpoint        endpoint.Endpoint
 	GetAnimalsEndpoint        endpoint.Endpoint
 	GetRandAnimalFactEndpoint endpoint.Endpoint
+	PublishFactEndpoint       endpoint.Endpoint
 }
 
 func MakeServerEndpoints(s Service, logger log.Logger) Endpoints {
@@ -22,6 +23,7 @@ func MakeServerEndpoints(s Service, logger log.Logger) Endpoints {
 		DeleteFactEndpoint:        MakeDeleteFactEndpoint(s),
 		GetAnimalsEndpoint:        MakeGetAnimalsEndpoint(s),
 		GetRandAnimalFactEndpoint: MakeGetRandAnimalFactEndpoint(s),
+		PublishFactEndpoint:       MakePublishFactEndpoint(s),
 	}
 
 	endpoints.CreateFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "CreateFact"))(endpoints.CreateFactEndpoint)
@@ -29,6 +31,7 @@ func MakeServerEndpoints(s Service, logger log.Logger) Endpoints {
 	endpoints.DeleteFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "DeleteFact"))(endpoints.DeleteFactEndpoint)
 	endpoints.GetAnimalsEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "GetAnimals"))(endpoints.GetAnimalsEndpoint)
 	endpoints.GetRandAnimalFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "GetRandAnimalFact"))(endpoints.GetRandAnimalFactEndpoint)
+	endpoints.PublishFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "PublishFact"))(endpoints.PublishFactEndpoint)
 
 	return endpoints
 }
@@ -69,6 +72,14 @@ func MakeGetRandAnimalFactEndpoint(s Service) endpoint.Endpoint {
 		req := request.(getRandAnimalFactRequest)
 		fact, e := s.GetRandAnimalFact(ctx, req.Animal)
 		return getRandAnimalFactResponse{Fact: fact, Err: e}, nil
+	}
+}
+
+func MakePublishFactEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(publishFactRequest)
+		fact, e := s.PublishFact(ctx, req.Animal)
+		return publishFactResponse{Fact: fact.Fact, ID: fact.ID}, e
 	}
 }
 
@@ -122,3 +133,15 @@ type getRandAnimalFactResponse struct {
 }
 
 func (r getRandAnimalFactResponse) error() error { return r.Err }
+
+type publishFactRequest struct {
+	Animal string
+}
+
+type publishFactResponse struct {
+	Fact string `json:"fact"`
+	ID   int64  `json:"id"`
+	Err  error  `json:"err,omitempty"`
+}
+
+func (r publishFactResponse) error() error { return r.Err }

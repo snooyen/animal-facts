@@ -8,6 +8,7 @@ service Facts {
     rpc DeleteFact(DeleteFactRequest) returns (DeleteFactReply);
     rpc GetAnimals(google.protobuf.Empty) returns (GetAnimalsReply);
     rpc GetRandAnimalFact(GetRandAnimalFactRequest) returns (GetRandAnimalFactReply);
+    rpc PublishFact(PublishFactRequest) returns (PublishFactReply);
 }
 
 message CreateFactRequest {
@@ -29,7 +30,6 @@ message GetFactReply {
     string Err = 2;
 }
 
-
 message DeleteFactRequest {
     int64 ID = 1;
 }
@@ -50,5 +50,15 @@ message GetRandAnimalFactRequest {
 message GetRandAnimalFactReply {
     string Fact = 1;
     int64 ID  = 2;
+    string Err = 3;
+}
+
+message PublishFactRequest {
+    string Animal = 1;
+}
+
+message PublishFactReply {
+    string Fact = 1;
+    int64 ID = 2;
     string Err = 3;
 }

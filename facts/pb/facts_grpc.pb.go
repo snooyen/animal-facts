@@ -24,6 +24,7 @@ type FactsClient interface {
 	DeleteFact(ctx context.Context, in *DeleteFactRequest, opts ...grpc.CallOption) (*DeleteFactReply, error)
 	GetAnimals(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetAnimalsReply, error)
 	GetRandAnimalFact(ctx context.Context, in *GetRandAnimalFactRequest, opts ...grpc.CallOption) (*GetRandAnimalFactReply, error)
+	PublishFact(ctx context.Context, in *PublishFactRequest, opts ...grpc.CallOption) (*PublishFactReply, error)
 }
 
 type factsClient struct {
@@ -79,6 +80,15 @@ func (c *factsClient) GetRandAnimalFact(ctx context.Context, in *GetRandAnimalFa
 	return out, nil
 }
 
+func (c *factsClient) PublishFact(ctx context.Context, in *PublishFactRequest, opts ...grpc.CallOption) (*PublishFactReply, error) {
+	out := new(PublishFactReply)
+	err := c.cc.Invoke(ctx, "/Facts/PublishFact", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // FactsServer is the server API for Facts service.
 // All implementations must embed UnimplementedFactsServer
 // for forward compatibility
@@ -88,6 +98,7 @@ type FactsServer interface {
 	DeleteFact(context.Context, *DeleteFactRequest) (*DeleteFactReply, error)
 	GetAnimals(context.Context, *emptypb.Empty) (*GetAnimalsReply, error)
 	GetRandAnimalFact(context.Context, *GetRandAnimalFactRequest) (*GetRandAnimalFactReply, error)
+	PublishFact(context.Context, *PublishFactRequest) (*PublishFactReply, error)
 	mustEmbedUnimplementedFactsServer()
 }
 
@@ -109,6 +120,9 @@ func (UnimplementedFactsServer) GetAnimals(context.Context, *emptypb.Empty) (*Ge
 }
 func (UnimplementedFactsServer) GetRandAnimalFact(context.Context, *GetRandAnimalFactRequest) (*GetRandAnimalFactReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRandAnimalFact not implemented")
+}
+func (UnimplementedFactsServer) PublishFact(context.Context, *PublishFactRequest) (*PublishFactReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PublishFact not implemented")
 }
 func (UnimplementedFactsServer) mustEmbedUnimplementedFactsServer() {}
 
@@ -213,6 +227,24 @@ func _Facts_GetRandAnimalFact_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Facts_PublishFact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PublishFactRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(FactsServer).PublishFact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Facts/PublishFact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(FactsServer).PublishFact(ctx, req.(*PublishFactRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Facts_ServiceDesc is the grpc.ServiceDesc for Facts service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -239,6 +271,10 @@ var Facts_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRandAnimalFact",
 			Handler:    _Facts_GetRandAnimalFact_Handler,
+		},
+		{
+			MethodName: "PublishFact",
+			Handler:    _Facts_PublishFact_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
