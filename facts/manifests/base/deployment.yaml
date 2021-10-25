@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: facts-api
-        image: ghcr.io/snooyen/animal-facts/facts-api:publisher
+        image: ghcr.io/snooyen/animal-facts/facts-api:main
         imagePullPolicy: Always
         command:
           - facts-api
