@@ -86,8 +86,8 @@ func (s service) handleSMSFact(ctx context.Context, action string, data string) 
 		return "", fmt.Errorf("not implemented")
 	case "DELETE":
 		ufid, err := strconv.Atoi(data)
-		if err == nil {
-			return data, err
+		if err != nil {
+			return data, ErrSMSBadFactData
 		}
 		r, err := s.facts.DeleteFact(ctx, &pb.DeleteFactRequest{ID: int64(ufid)})
 		if err != nil {
