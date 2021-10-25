@@ -34,10 +34,9 @@ func (mw serviceLoggingMiddleware) ProcessApprovalRequests(ctx context.Context) 
 }
 
 func (mw serviceLoggingMiddleware) HandleSMS(ctx context.Context, req handleSMSRequest) (b string, err error) {
-	defer func() {
-		mw.logger.Log("method", "HandleSMS", "err", err, "req", fmt.Sprintf("%+v", req))
-	}()
+	mw.logger.Log("method", "HandleSMS", "msg", "start", "req", fmt.Sprintf("%+v", req))
 	b, err = mw.next.HandleSMS(ctx, req)
+	mw.logger.Log("method", "HandleSMS", "rsp", b, "err", err)
 	return b, err
 }
 
