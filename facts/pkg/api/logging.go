@@ -64,6 +64,14 @@ func (mw serviceLoggingMiddleware) GetRandAnimalFact(ctx context.Context, animal
 	return mw.next.GetRandAnimalFact(ctx, animal)
 }
 
+func (mw serviceLoggingMiddleware) PublishFact(ctx context.Context, animal string) (fact Fact, err error) {
+	defer func() {
+		mw.logger.Log("method", "PublishFact", "animal", animal, "err", err)
+	}()
+
+	return mw.next.PublishFact(ctx, animal)
+}
+
 /* Endpoint Logging Middleware
 Returns an endpoint middleware that logs the
 duration of each invocation, and the resulting error, if any.

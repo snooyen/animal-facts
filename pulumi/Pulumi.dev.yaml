@@ -1,6 +1,9 @@
 config:
+  fact-admin:admin-auth:
+    secure: AAABAO4015kzmijKQbfCwi3M83UxLd7Aiwa+bmr7DG4h2hhc/gMLMa/GxW4sHygA3wrrVfCbTs39tUtaDwcIC8ONz2nfZXS03WcJz7g=
   fact-admin:overlay: ../factadmin/manifests/overlays/dev
-  fact-publisher:overlay: ../factpublisher/manifests/overlays/dev
+  fact-admin:twilio-auth:
+    secure: AAABAFoCs7IsJhDZ05cqWIZlSGJKvOA8junTibS5ygL0Dc36+zPrdGyeILjQ7soSMMR9AkQZuDRfETY3oeOYohP9xQJ2YuKaxJodhQ==
   fact-scraper:overlay: ../factscraper/manifests/overlays/dev
   facts-api:overlay: ../facts/manifests/overlays/dev
   kubernetes:context: lke39117-ctx
