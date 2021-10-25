@@ -4,7 +4,6 @@ config:
   fact-admin:overlay: ../factadmin/manifests/overlays/dev
   fact-admin:twilio-auth:
     secure: AAABAFoCs7IsJhDZ05cqWIZlSGJKvOA8junTibS5ygL0Dc36+zPrdGyeILjQ7soSMMR9AkQZuDRfETY3oeOYohP9xQJ2YuKaxJodhQ==
-  fact-publisher:overlay: ../factpublisher/manifests/overlays/dev
   fact-scraper:overlay: ../factscraper/manifests/overlays/dev
   facts-api:overlay: ../facts/manifests/overlays/dev
   kubernetes:context: lke39117-ctx
