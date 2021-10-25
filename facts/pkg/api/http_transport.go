@@ -58,6 +58,13 @@ func NewHTTPHandler(endpoints Endpoints, logger log.Logger) http.Handler {
 		options...,
 	))
 
+	r.Methods("POST").Path("/animals/{animal}/publish").Handler(httptransport.NewServer(
+		endpoints.PublishFactEndpoint,
+		decodeHTTPPublishFactRequest,
+		encodeResponse,
+		options...,
+	))
+
 	r.Methods("GET").Path("/random/{animal}").Handler(httptransport.NewServer(
 		endpoints.GetRandAnimalFactEndpoint,
 		decodeHTTPGetRandAnimalFactRequest,
@@ -112,12 +119,26 @@ func decodeHTTPGetRandAnimalFactRequest(_ context.Context, r *http.Request) (req
 	vars := mux.Vars(r)
 	animal, ok := vars["animal"]
 	if !ok {
-		return -1, ErrBadRouting
+		return nil, ErrBadRouting
 	}
 
 	req := getRandAnimalFactRequest{Animal: animal}
 	e := json.NewDecoder(r.Body).Decode(&request)
 	if e == nil {
+		return nil, e
+	}
+	return req, nil
+}
+
+func decodeHTTPPublishFactRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
+	vars := mux.Vars(r)
+	animal, ok := vars["animal"]
+	if !ok {
+		return nil, ErrBadRouting
+	}
+
+	req := publishFactRequest{Animal: animal}
+	if e := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, e
 	}
 	return req, nil

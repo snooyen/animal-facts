@@ -17,6 +17,7 @@ type Service interface {
 	DeleteFact(ctx context.Context, ufid int64) error
 	GetAnimals(ctx context.Context) ([]string, error)
 	GetRandAnimalFact(ctx context.Context, animal string) (Fact, error)
+	PublishFact(ctx context.Context, animal string) (fact Fact, err error)
 }
 
 type Fact struct {
@@ -115,8 +116,25 @@ func (s service) GetFact(ctx context.Context, ufid int64) (Fact, error) {
 
 // DeleteFact deletes a fact given its id
 func (s service) DeleteFact(ctx context.Context, ufid int64) error {
+	fact, err := s.GetFact(ctx, ufid)
+	if err != nil {
+		return err
+	}
 
-	return errors.New("not implemented")
+	key := fmt.Sprintf("%s%d", factHashPrefix, fact.ID)
+	// Update Fact.Deleted
+	err = s.rdb.HSet(ctx, key, "Deleted", 1).Err()
+	if err != nil {
+		return err
+	}
+
+	// Remove the fact from the animal's fact set
+	err = s.rdb.ZRem(ctx, fact.Animal, fact.ID).Err()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetAnimals returns a list of known animals
@@ -144,6 +162,17 @@ func (s service) GetRandAnimalFact(ctx context.Context, animal string) (Fact, er
 	}
 
 	return fact, err
+}
+
+func (s service) PublishFact(ctx context.Context, animal string) (fact Fact, err error) {
+	fact, err = s.GetRandAnimalFact(ctx, animal)
+	if err != nil {
+		return
+	}
+	approvalChan := fmt.Sprintf("approvals:%s", animal)
+	approvalMsg := fmt.Sprintf("%d:%s", fact.ID, fact.Fact)
+	err = s.rdb.Publish(ctx, approvalChan, approvalMsg).Err()
+	return
 }
 
 func (s service) getRandFactID(ctx context.Context, animal string) (int64, error) {

@@ -17,3 +17,4 @@ _output/
 bin/
 *.code-workspace
 .DS_Store
+.vscode/
