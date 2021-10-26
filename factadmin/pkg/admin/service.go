@@ -82,8 +82,13 @@ func (s service) handleSMSFact(ctx context.Context, action string, data string) 
 	switch action {
 	case "APPROVE":
 		return "", fmt.Errorf("not implemented")
-	case "DEFER":
-		return "", fmt.Errorf("not implemented")
+	case "PUBLISH":
+		reqAnimal := strings.TrimSpace(data)
+		r, err := s.facts.PublishFact(ctx, &pb.PublishFactRequest{Animal: reqAnimal})
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%+v", r), err
 	case "DELETE":
 		ufid, err := strconv.Atoi(data)
 		if err != nil {
@@ -93,7 +98,7 @@ func (s service) handleSMSFact(ctx context.Context, action string, data string) 
 		if err != nil {
 			return "", err
 		}
-		return r.Err, err
+		return fmt.Sprintf("%+v", r), err
 	default:
 		return "", ErrSMSActionUnsupported
 	}
