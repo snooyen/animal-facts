@@ -131,7 +131,13 @@ func decodeGRPCGetFactRequest(_ context.Context, grpcReq interface{}) (interface
 
 func encodeGRPCGetFactResponse(_ context.Context, response interface{}) (interface{}, error) {
 	resp := response.(getFactResponse)
-	return &pb.GetFactReply{Err: errToStr(resp.Err)}, nil
+	return &pb.GetFactReply{
+		Animal:  resp.Fact.Animal,
+		Fact:    resp.Fact.Fact,
+		ID:      resp.Fact.ID,
+		Deleted: resp.Fact.Deleted,
+		Err:     errToStr(resp.Err),
+	}, nil
 }
 
 func decodeGRPCDeleteFactRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
