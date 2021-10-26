@@ -26,8 +26,11 @@ message GetFactRequest {
 }
 
 message GetFactReply {
-    string Fact = 1;
-    string Err = 2;
+    string Animal = 1;
+    string Fact = 2;
+    int64 ID = 3;
+    bool Deleted = 4;
+    string Err = 5;
 }
 
 message DeleteFactRequest {
