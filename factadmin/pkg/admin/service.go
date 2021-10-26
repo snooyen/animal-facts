@@ -83,7 +83,7 @@ func (s service) handleSMSFact(ctx context.Context, action string, data string) 
 	case "APPROVE":
 		return "", fmt.Errorf("not implemented")
 	case "PUBLISH":
-		reqAnimal := strings.TrimSpace(data)
+		reqAnimal := strings.ToLower(strings.TrimSpace(data))
 		r, err := s.facts.PublishFact(ctx, &pb.PublishFactRequest{Animal: reqAnimal})
 		if err != nil {
 			return "", err
