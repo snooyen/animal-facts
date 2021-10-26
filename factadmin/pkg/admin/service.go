@@ -81,7 +81,19 @@ func (s service) HandleSMS(ctx context.Context, req handleSMSRequest) (string, e
 func (s service) handleSMSFact(ctx context.Context, action string, data string) (string, error) {
 	switch action {
 	case "APPROVE":
-		return "", fmt.Errorf("not implemented")
+		ufid, err := strconv.Atoi(data)
+		if err != nil {
+			return data, ErrSMSBadFactData
+		}
+		r, err := s.facts.GetFact(ctx, &pb.GetFactRequest{ID: int64(ufid)})
+		if err != nil {
+			return data, err
+		}
+
+		channel := fmt.Sprintf("subscription:%s", "r.Animal")
+		msg := fmt.Sprintf("%+v", r)
+		err = s.rdb.Publish(ctx, channel, msg).Err()
+		return msg, err
 	case "PUBLISH":
 		reqAnimal := strings.ToLower(strings.TrimSpace(data))
 		r, err := s.facts.PublishFact(ctx, &pb.PublishFactRequest{Animal: reqAnimal})
