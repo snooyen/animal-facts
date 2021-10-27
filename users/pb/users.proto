@@ -1,7 +1,7 @@
 syntax = "proto3";
 option go_package = "module github.com/snooyen/animal-facts/users/pb";
 
-service Facts {
+service Users {
     rpc CreateUser(CreateUserRequest) returns (CreateUserReply);
     rpc GetUser(GetUserRequest) returns (GetUserReply);
     rpc DeleteUser(DeleteUserRequest) returns (DeleteUserReply);
