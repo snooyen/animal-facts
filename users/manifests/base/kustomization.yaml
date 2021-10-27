@@ -9,5 +9,3 @@ commonLabels:
 resources:
   - deployment.yaml
   - service.yaml
-  - ingress.yaml
-  - publisher-job.yaml
