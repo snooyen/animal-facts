@@ -8,69 +8,51 @@ import (
 )
 
 type Endpoints struct {
-	ApproveFactEndpoint endpoint.Endpoint
-	DeferFactEndpoint   endpoint.Endpoint
-	DeleteFactEndpoint  endpoint.Endpoint
+	HandleSMSEndpoint endpoint.Endpoint
 }
 
 func MakeServerEndpoints(s Service, logger log.Logger) Endpoints {
 	endpoints := Endpoints{
-		ApproveFactEndpoint: MakeApproveFactEndpoint(s),
-		DeferFactEndpoint:   MakeDeferFactEndpoint(s),
-		DeleteFactEndpoint:  MakeDeleteFactEndpoint(s),
+		HandleSMSEndpoint: MakeHandleSMSEndpoint(s),
 	}
 
-	endpoints.ApproveFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "ApproveFact"))(endpoints.ApproveFactEndpoint)
-	endpoints.DeferFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "DeferFact"))(endpoints.DeferFactEndpoint)
-	endpoints.DeleteFactEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "DeleteFact"))(endpoints.DeleteFactEndpoint)
+	endpoints.HandleSMSEndpoint = EndpointLoggingMiddleware(log.With(logger, "method", "HandleSMS"))(endpoints.HandleSMSEndpoint)
 
 	return endpoints
 }
 
-func MakeApproveFactEndpoint(s Service) endpoint.Endpoint {
+func MakeHandleSMSEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return struct{}{}, nil
+		req := request.(handleSMSRequest)
+		_, e := s.HandleSMS(ctx, req)
+		return handleSMSResponse{Err: e}, nil
 	}
 }
 
-func MakeDeferFactEndpoint(s Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return struct{}{}, nil
-	}
+type handleSMSRequest struct {
+	ToCountry     string
+	ToState       string
+	SmsMessageSid string
+	NumMedia      string
+	ToCity        string
+	FromZip       string
+	SmsSid        string
+	FromState     string
+	SmsStatus     string
+	FromCity      string
+	Body          string
+	FromCountry   string
+	To            string
+	ToZip         string
+	NumSegments   string
+	MessageSid    string
+	AccountSid    string
+	From          string
+	ApiVersion    string
 }
 
-func MakeDeleteFactEndpoint(s Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		return struct{}{}, nil
-	}
-}
-
-type approveFactRequest struct {
-	ID int64
-}
-
-type approveFactResponse struct {
+type handleSMSResponse struct {
 	Err error `json:"err,omitempty"`
 }
 
-func (r approveFactResponse) error() error { return r.Err }
-
-type deferFactRequest struct {
-	ID int64
-}
-
-type deferFactResponse struct {
-	Err error `json:"err,omitempty"`
-}
-
-func (r deferFactResponse) error() error { return r.Err }
-
-type deleteFactRequest struct {
-	ID int64
-}
-
-type deleteFactResponse struct {
-	Err error `json:"err,omitempty"`
-}
-
-func (r deleteFactResponse) error() error { return r.Err }
+func (r handleSMSResponse) error() error { return r.Err }

@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-kit/kit/endpoint"
@@ -24,36 +25,19 @@ type serviceLoggingMiddleware struct {
 	next   Service
 }
 
-func (mw serviceLoggingMiddleware) ApproveFact(ctx context.Context, ufid int64) (err error) {
-	defer func() {
-		mw.logger.Log("method", "ApproveFact", "ufid", ufid, "err", err)
-	}()
-
-	return mw.next.ApproveFact(ctx, ufid)
-}
-
-func (mw serviceLoggingMiddleware) DeferFact(ctx context.Context, ufid int64) (err error) {
-	defer func() {
-		mw.logger.Log("method", "DeferFact", "ufid", ufid, "err", err)
-	}()
-
-	return mw.next.DeferFact(ctx, ufid)
-}
-
-func (mw serviceLoggingMiddleware) DeleteFact(ctx context.Context, ufid int64) (err error) {
-	defer func() {
-		mw.logger.Log("method", "DeleteFact", "ufid", ufid, "err", err)
-	}()
-
-	return mw.next.DeleteFact(ctx, ufid)
-}
-
 func (mw serviceLoggingMiddleware) ProcessApprovalRequests(ctx context.Context) (err error) {
 	defer func() {
 		mw.logger.Log("method", "ProcessApprovalRequests", "err", err)
 	}()
 
 	return mw.next.ProcessApprovalRequests(ctx)
+}
+
+func (mw serviceLoggingMiddleware) HandleSMS(ctx context.Context, req handleSMSRequest) (b string, err error) {
+	mw.logger.Log("method", "HandleSMS", "msg", "start", "req", fmt.Sprintf("%+v", req))
+	b, err = mw.next.HandleSMS(ctx, req)
+	mw.logger.Log("method", "HandleSMS", "rsp", b, "err", err)
+	return b, err
 }
 
 /* Endpoint Logging Middleware

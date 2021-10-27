@@ -5,11 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/go-kit/log"
 	"github.com/go-redis/redis/v8"
+	"github.com/snooyen/animal-facts/facts/pb"
 	"github.com/twilio/twilio-go"
 	openapi "github.com/twilio/twilio-go/rest/api/v2010"
 )
@@ -19,19 +22,21 @@ const (
 )
 
 var (
-	ErrAnimalUnsupported         = errors.New("unsupported animal")
-	ErrApprovalActionUnsupported = errors.New("unsupported action")
+	ErrAnimalUnsupported    = errors.New("unsupported animal")
+	ErrSMSTypeUnsupported   = errors.New("unsupported sms type")
+	ErrSMSActionUnsupported = errors.New("unsupported sms action")
+	ErrSMSBadFactData       = errors.New("could not convert FACT data to int")
+	smsRegExp               = regexp.MustCompile(`(?m)^(?P<type>FACT|USER):(?P<action>[[:alpha:]]*):(?P<data>.*)$`)
 )
 
 // Service describes a service that publishs the web for animal-facts
 type Service interface {
-	ApproveFact(ctx context.Context, ufid int64) error
-	DeferFact(ctx context.Context, ufid int64) error
-	DeleteFact(ctx context.Context, ufid int64) error
+	HandleSMS(ctx context.Context, req handleSMSRequest) (string, error)
 	ProcessApprovalRequests(ctx context.Context) (err error)
 }
 
 type service struct {
+	facts        pb.FactsClient
 	rdb          *redis.Client
 	twilio       *twilio.RestClient
 	logger       log.Logger
@@ -39,8 +44,9 @@ type service struct {
 	adminNumber  string
 }
 
-func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.Logger, twilioNumber, adminNumber string) (s Service) {
+func New(factsClient pb.FactsClient, redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.Logger, twilioNumber, adminNumber string) (s Service) {
 	s = service{
+		facts:        factsClient,
 		rdb:          redisClient,
 		twilio:       twilioClient,
 		logger:       logger,
@@ -48,19 +54,70 @@ func New(redisClient *redis.Client, twilioClient *twilio.RestClient, logger log.
 		adminNumber:  adminNumber,
 	}
 
-	return
+	return ServiceLoggingMiddleware(logger)(s)
 }
 
-func (s service) ApproveFact(ctx context.Context, ufid int64) error {
-	return nil
+func (s service) HandleSMS(ctx context.Context, req handleSMSRequest) (string, error) {
+
+	// Parse SMS Body for Action
+	match := smsRegExp.FindStringSubmatch(req.Body)
+	body := make(map[string]string)
+	for i, name := range smsRegExp.SubexpNames() {
+		if i != 0 && name != "" {
+			body[name] = match[i]
+		}
+	}
+
+	switch body["type"] {
+	case "FACT":
+		return s.handleSMSFact(ctx, body["action"], body["data"])
+	case "USER":
+		return s.handleSMSUser(ctx, body["action"], body["data"])
+	default:
+		return "", ErrSMSTypeUnsupported
+	}
 }
 
-func (s service) DeferFact(ctx context.Context, ufid int64) error {
-	return nil
+func (s service) handleSMSFact(ctx context.Context, action string, data string) (string, error) {
+	switch action {
+	case "APPROVE":
+		ufid, err := strconv.Atoi(data)
+		if err != nil {
+			return data, ErrSMSBadFactData
+		}
+		r, err := s.facts.GetFact(ctx, &pb.GetFactRequest{ID: int64(ufid)})
+		if err != nil {
+			return data, err
+		}
+
+		channel := fmt.Sprintf("subscription:%s", r.Animal)
+		msg := fmt.Sprintf("%d", r.ID)
+		err = s.rdb.Publish(ctx, channel, msg).Err()
+		return fmt.Sprintf("%+v", r), err
+	case "PUBLISH":
+		reqAnimal := strings.ToLower(strings.TrimSpace(data))
+		r, err := s.facts.PublishFact(ctx, &pb.PublishFactRequest{Animal: reqAnimal})
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%+v", r), err
+	case "DELETE":
+		ufid, err := strconv.Atoi(data)
+		if err != nil {
+			return data, ErrSMSBadFactData
+		}
+		r, err := s.facts.DeleteFact(ctx, &pb.DeleteFactRequest{ID: int64(ufid)})
+		if err != nil {
+			return "", err
+		}
+		return fmt.Sprintf("%+v", r), err
+	default:
+		return "", ErrSMSActionUnsupported
+	}
 }
 
-func (s service) DeleteFact(ctx context.Context, ufid int64) error {
-	return nil
+func (s service) handleSMSUser(ctx context.Context, action string, data string) (string, error) {
+	return fmt.Sprintf("GOT %s action on USER with data: %s", action, data), nil
 }
 
 func (s service) ProcessApprovalRequests(ctx context.Context) (err error) {
