@@ -1,0 +1,42 @@
+syntax = "proto3";
+option go_package = "module github.com/snooyen/animal-facts/users/pb";
+
+service Facts {
+    rpc CreateUser(CreateUserRequest) returns (CreateUserReply);
+    rpc GetUser(GetUserRequest) returns (GetUserReply);
+    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserReply);
+}
+
+message CreateUserRequest {
+    string Name = 1;
+    string Phone = 2;
+    string WelcomeMessage = 3;
+    repeated string Subscriptions = 4;
+    bool Deleted = 5;
+}
+
+message CreateUserReply {
+    int64 ID = 1;
+    string Err = 2;
+}
+
+message GetUserRequest {
+    int64 ID = 1;
+}
+
+message GetUserReply {
+    string Name = 1;
+    string Phone = 2;
+    string WelcomeMessage = 3;
+    repeated string Subscriptions = 4;
+    bool Deleted = 5;
+    string Err = 6;
+}
+
+message DeleteUserRequest {
+    int64 ID = 1;
+}
+
+message DeleteUserReply {
+    string Err = 1;
+}
