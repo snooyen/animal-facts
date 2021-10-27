@@ -90,7 +90,7 @@ func (s service) handleSMSFact(ctx context.Context, action string, data string) 
 			return data, err
 		}
 
-		channel := fmt.Sprintf("subscription:%s", "r.Animal")
+		channel := fmt.Sprintf("subscription:%s", r.Animal)
 		msg := fmt.Sprintf("%+v", r)
 		err = s.rdb.Publish(ctx, channel, msg).Err()
 		return msg, err
