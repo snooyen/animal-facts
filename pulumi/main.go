@@ -21,6 +21,7 @@ const (
 var (
 	services = []string{
 		"facts-api",
+		"users-api",
 		"fact-scraper",
 		"fact-admin",
 	}
