@@ -36,7 +36,8 @@ var (
 	phoneSetKey            = "phones"
 	nextUserIDKey          = "next_uid"
 	userHashPrefix         = "user:"
-	subscriptionsSetPrefix = "subscribers:"
+	subscribersSetPrefix   = "subscribers:"
+	subscriptionsSetPrefix = "subscriptions:"
 )
 
 func New(redisClient *redis.Client, logger log.Logger) Service {
@@ -71,8 +72,6 @@ func (s service) CreateUser(ctx context.Context, user User) (uuid int64, err err
 		return
 	}
 
-	// TODO: Provide a default welcome message
-	// TODO: Track last known message
 	// Save User
 	key := fmt.Sprintf("%s%d", userHashPrefix, uuid)
 	if _, err = s.rdb.Pipelined(ctx, func(rdb redis.Pipeliner) error {
@@ -80,17 +79,21 @@ func (s service) CreateUser(ctx context.Context, user User) (uuid int64, err err
 		rdb.HSet(ctx, key, "Name", user.Name)
 		rdb.HSet(ctx, key, "Phone", user.Phone)
 		rdb.HSet(ctx, key, "WelcomeMessage", user.WelcomeMessage)
-		rdb.HSet(ctx, key, "Subscriptions", fmt.Sprintf("%v", user.Subscriptions))
 		rdb.HSet(ctx, key, "Deleted", false)
 		return nil
 	}); err != nil {
 		return
 	}
 
-	// Add user to subscriptions
+	// Add user subscriptions
+	subscriptionsKey := fmt.Sprintf("%s%d", subscriptionsSetPrefix, uuid)
 	for _, sub := range user.Subscriptions {
-		key = fmt.Sprintf("%s%s", subscriptionsSetPrefix, sub)
+		key = fmt.Sprintf("%s%s", subscribersSetPrefix, sub)
 		err = s.rdb.SAdd(ctx, key, uuid).Err()
+		if err != nil {
+			return
+		}
+		err = s.rdb.SAdd(ctx, subscriptionsKey, sub).Err()
 		if err != nil {
 			return
 		}
@@ -100,11 +103,49 @@ func (s service) CreateUser(ctx context.Context, user User) (uuid int64, err err
 }
 
 // GetUser retrieves a single user from redis by its id
-func (s service) GetUser(ctx context.Context, uuid int64) (User, error) {
-	return User{}, fmt.Errorf("not implemented")
+func (s service) GetUser(ctx context.Context, uuid int64) (user User, err error) {
+	user = User{}
+	key := fmt.Sprintf("%s%d", userHashPrefix, uuid)
+	err = s.rdb.HGetAll(ctx, key).Scan(&user)
+	if user.ID == 0 {
+		err = ErrNotFound
+	}
+	if err != nil {
+		return
+	}
+
+	key = fmt.Sprintf("%s%d", subscriptionsSetPrefix, uuid)
+	user.Subscriptions, err = s.rdb.SMembers(ctx, key).Result()
+	if err != nil {
+		return User{}, err
+	}
+
+	return
 }
 
 // DeleteUser deletes a user given its id
-func (s service) DeleteUser(ctx context.Context, uuid int64) error {
-	return fmt.Errorf("not implemented")
+func (s service) DeleteUser(ctx context.Context, uuid int64) (err error) {
+	user, err := s.GetUser(ctx, uuid)
+	if err != nil {
+		return
+	}
+
+	userKey := fmt.Sprintf("%s%d", userHashPrefix, user.ID)
+	subscriptionsKey := fmt.Sprintf("%s%d", subscriptionsSetPrefix, uuid)
+	if _, err = s.rdb.Pipelined(ctx, func(rdb redis.Pipeliner) error {
+		rdb.SRem(ctx, phoneSetKey, user.Phone)
+		rdb.Del(ctx, subscriptionsKey)
+		for _, sub := range user.Subscriptions {
+			key := fmt.Sprintf("%s%s", subscribersSetPrefix, sub)
+			rdb.SRem(ctx, key, uuid)
+		}
+		rdb.HSet(ctx, userKey, "Phone", "")
+		rdb.HSet(ctx, userKey, "WelcomeMessage", "")
+		rdb.HSet(ctx, userKey, "Deleted", true)
+		return nil
+	}); err != nil {
+		return
+	}
+
+	return nil
 }
