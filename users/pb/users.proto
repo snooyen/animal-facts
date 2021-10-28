@@ -25,12 +25,13 @@ message GetUserRequest {
 }
 
 message GetUserReply {
-    string Name = 1;
-    string Phone = 2;
-    string WelcomeMessage = 3;
-    repeated string Subscriptions = 4;
-    bool Deleted = 5;
-    string Err = 6;
+    int64 ID = 1;
+    string Name = 2;
+    string Phone = 3;
+    string WelcomeMessage = 4;
+    repeated string Subscriptions = 5;
+    bool Deleted = 6;
+    string Err = 7;
 }
 
 message DeleteUserRequest {

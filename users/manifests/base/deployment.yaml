@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: users-api
-        image: ghcr.io/snooyen/animal-users/users-api:users
+        image: ghcr.io/snooyen/animal-facts/users-api:users
         imagePullPolicy: Always
         command:
           - users-api
