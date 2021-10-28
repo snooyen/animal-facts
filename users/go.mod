@@ -7,7 +7,6 @@ require (
 	github.com/go-kit/log v0.2.0
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/gorilla/mux v1.8.0
-	github.com/snooyen/animal-facts/facts v0.0.0-20211027015719-137f22202013
 	github.com/spf13/pflag v1.0.5
 	google.golang.org/grpc v1.41.0
 	google.golang.org/protobuf v1.27.1
