@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: subscriptions
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: subscriptions
+  template:
+    metadata:
+      labels:
+        deployment: subscriptions
+    spec:
+      containers:
+      - name: subscriptions
+        image: ghcr.io/snooyen/animal-facts/subscriptions:main
+        imagePullPolicy: Always
+        command:
+          - subscriptions
+          - --redisHost=redis-master
+          - --redisPassword=$(REDIS_PASSWORD)
+          - --twilioNumber=$(TWILIO_PHONE_NUMBER)
+        env:
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis
+              key: redis-password
+        - name: TWILIO_PHONE_NUMBER
+          valueFrom:
+            secretKeyRef:
+              name: twilio
+              key: twilioNumber
+        - name: TWILIO_ACCOUNT_SID
+          valueFrom:
+            secretKeyRef:
+              name: twilio
+              key: accountsid
+        - name: TWILIO_AUTH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: twilio
+              key: token
