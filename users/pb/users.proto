@@ -30,8 +30,9 @@ message GetUserReply {
     string Phone = 3;
     string WelcomeMessage = 4;
     repeated string Subscriptions = 5;
-    bool Deleted = 6;
-    string Err = 7;
+    int64 FactsReceived = 6;
+    bool Deleted = 7;
+    string Err = 8;
 }
 
 message DeleteUserRequest {

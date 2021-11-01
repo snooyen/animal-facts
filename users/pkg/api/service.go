@@ -22,6 +22,7 @@ type User struct {
 	Phone          string   `json:"phone" redis:"Phone"`
 	WelcomeMessage string   `json:"welcomeMessage" redis:"WelcomeMessage"`
 	Subscriptions  []string `json:"subscriptions" redis:"Subscriptions"`
+	FactsReceived  int64    `json:"factsReceived" redis:"FactsReceived"`
 	Deleted        bool     `json:"deleted" redis:"Deleted"`
 }
 
@@ -79,6 +80,7 @@ func (s service) CreateUser(ctx context.Context, user User) (uuid int64, err err
 		rdb.HSet(ctx, key, "Name", user.Name)
 		rdb.HSet(ctx, key, "Phone", user.Phone)
 		rdb.HSet(ctx, key, "WelcomeMessage", user.WelcomeMessage)
+		rdb.HSet(ctx, key, "FactsReceived", 0)
 		rdb.HSet(ctx, key, "Deleted", false)
 		return nil
 	}); err != nil {

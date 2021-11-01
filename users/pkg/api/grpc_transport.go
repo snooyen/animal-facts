@@ -96,6 +96,7 @@ func encodeGRPCGetUserResponse(_ context.Context, response interface{}) (interfa
 		Phone:          resp.User.Phone,
 		WelcomeMessage: resp.User.WelcomeMessage,
 		Subscriptions:  resp.User.Subscriptions,
+		FactsReceived:  resp.User.FactsReceived,
 		Deleted:        resp.User.Deleted,
 		Err:            errToStr(resp.Err),
 	}, nil
