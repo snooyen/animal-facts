@@ -86,7 +86,11 @@ func (s *subscription) sendFact(ctx context.Context, subscriber string, fact str
 	params.SetFrom(s.twilioNumber)
 	params.SetTo(r.GetPhone())
 
-	//TODO: Check if we need to send a welcome message
+	if r.GetFactsReceived() < 1 {
+		params.SetBody(r.GetWelcomeMessage() + "\n\n" + msg)
+	} else {
+		params.SetBody(msg)
+	}
 
 	params.SetBody(msg)
 	rsp, err := s.twilio.ApiV2010.CreateMessage(params)
