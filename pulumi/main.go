@@ -24,6 +24,7 @@ var (
 		"users-api",
 		"fact-scraper",
 		"fact-admin",
+		"subscriptions",
 	}
 )
 
