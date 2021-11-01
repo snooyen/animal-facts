@@ -6,7 +6,7 @@ require (
 	github.com/go-kit/kit v0.12.0
 	github.com/go-kit/log v0.2.0
 	github.com/go-redis/redis/v8 v8.11.4
-	github.com/snooyen/animal-facts/users v0.0.0-20211031191714-ca517fa9499e
+	github.com/snooyen/animal-facts/users v0.0.0-20211101005021-a64b4164f116
 	github.com/spf13/pflag v1.0.5
 	github.com/twilio/twilio-go v0.17.0
 	google.golang.org/grpc v1.41.0

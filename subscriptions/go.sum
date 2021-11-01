@@ -92,6 +92,8 @@ github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4/go.mod h1:
 github.com/rogpeppe/fastuuid v1.2.0/go.mod h1:jVj6XXZzXRy/MSR5jhDC/2q6DgLz+nrA6LYCDYWNEvQ=
 github.com/snooyen/animal-facts/users v0.0.0-20211031191714-ca517fa9499e h1:MVi12CmncHx/IHep5noJeNkiLR2xtMjGUej4Er14M8c=
 github.com/snooyen/animal-facts/users v0.0.0-20211031191714-ca517fa9499e/go.mod h1:wgnFY1CF9YqbGrskxrFJJFr966UvqSiHbh/VJoMxiRo=
+github.com/snooyen/animal-facts/users v0.0.0-20211101005021-a64b4164f116 h1:XAa6TB4ghsguGsJSoNy5Zocoey/ghv0A0lEw1CCe3To=
+github.com/snooyen/animal-facts/users v0.0.0-20211101005021-a64b4164f116/go.mod h1:wgnFY1CF9YqbGrskxrFJJFr966UvqSiHbh/VJoMxiRo=
 github.com/spaolacci/murmur3 v0.0.0-20180118202830-f09979ecbc72/go.mod h1:JwIasOWyU6f++ZhiEuf87xNszmSA2myDM2Kzu9HwQUA=
 github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
 github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=

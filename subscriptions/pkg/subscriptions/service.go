@@ -87,16 +87,17 @@ func (s *subscription) sendFact(ctx context.Context, subscriber string, fact str
 	params.SetTo(r.GetPhone())
 
 	if r.GetFactsReceived() < 1 {
+		s.logger.Log("method", "sendFact", "user", r.GetPhone(), "message", "first fact")
 		params.SetBody(r.GetWelcomeMessage() + "\n\n" + msg)
 	} else {
 		params.SetBody(msg)
 	}
 
-	params.SetBody(msg)
 	rsp, err := s.twilio.ApiV2010.CreateMessage(params)
 	if err != nil {
 		s.logger.Log("method", "sendFact", "error", err, "params", params)
 	}
+	s.rdb.HIncrBy(ctx, "user:"+subscriber, "FactsReceived", 1)
 	response, _ := json.Marshal(*rsp)
 	s.logger.Log("method", "sendFact", "user", r.GetPhone(), "response", string(response))
 }
